@@ -4,8 +4,8 @@ import (
 	"math"
 
 	"coord"
-	"digest2/lmfit"
 	"digest2/obs"
+	"lmfit"
 )
 
 // twoObs computes two observations suitable for computing motion vector.
