@@ -4,7 +4,7 @@ package lmfit
 import (
 	"math"
 
-	"code.google.com/p/digest2/go/coord"
+	"digest2/coord"
 )
 
 const (

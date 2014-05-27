@@ -5,8 +5,8 @@ package obs
 import (
 	"math"
 
-	"code.google.com/p/digest2/go/astro"
-	"code.google.com/p/digest2/go/coord"
+	"digest2/astro"
+	"digest2/coord"
 )
 
 // VMeas represents a "visual" measurment in units convenient for computations.

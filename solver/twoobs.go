@@ -3,9 +3,9 @@ package d2solver
 import (
 	"math"
 
-	"code.google.com/p/digest2/go/coord"
-	"code.google.com/p/digest2/go/lmfit"
-	"code.google.com/p/digest2/go/obs"
+	"digest2/coord"
+	"digest2/lmfit"
+	"digest2/obs"
 )
 
 // twoObs computes two observations suitable for computing motion vector.

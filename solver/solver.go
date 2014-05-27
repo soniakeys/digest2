@@ -4,10 +4,10 @@ package d2solver
 import (
 	"math"
 
-	"code.google.com/p/digest2/go/astro"
-	"code.google.com/p/digest2/go/bin"
-	"code.google.com/p/digest2/go/coord"
-	"code.google.com/p/digest2/go/obs"
+	"digest2/astro"
+	"digest2/bin"
+	"digest2/coord"
+	"digest2/obs"
 )
 
 // D2Solver contains data and parameters needed for the digest2 algorithm.

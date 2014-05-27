@@ -18,13 +18,13 @@ import (
 	"strings"
 	"time"
 
-	"code.google.com/p/digest2/go/bin"
-	"code.google.com/p/digest2/go/mpc"
-	"code.google.com/p/digest2/go/obs"
-	"code.google.com/p/digest2/go/solver"
+	"digest2/bin"
+	"digest2/mpc"
+	"digest2/obs"
+	"digest2/solver"
 )
 
-const parentImport = "code.google.com/p/digest2/go"
+const parentImport = "digest2"
 const versionString = "Digest2 version 0.15 Go source"
 const copyrightString = "(c) 2013 Sonia Keys."
 

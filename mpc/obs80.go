@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"code.google.com/p/digest2/go/coord"
-	"code.google.com/p/digest2/go/obs"
+	"digest2/coord"
+	"digest2/obs"
 )
 
 // ParseObs80 parses a single line observation in the MPC 80 column format.

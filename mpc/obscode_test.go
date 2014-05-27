@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"code.google.com/p/digest2/go/mpc"
+	"digest2/mpc"
 )
 
 var siteTestCases = []struct {

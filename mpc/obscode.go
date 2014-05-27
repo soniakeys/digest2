@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"code.google.com/p/digest2/go/obs"
+	"digest2/obs"
 )
 
 // OcdUrl links to the present location of the file known as obscode.dat,

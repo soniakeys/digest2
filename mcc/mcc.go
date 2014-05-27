@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-const parentImport = "code.google.com/p/digest2/go"
+const parentImport = "digest2"
 const versionString = "mcc version 0.1"
 const copyrightString = "(c) 2012 Sonia Keys."
 

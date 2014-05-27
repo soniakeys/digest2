@@ -16,10 +16,10 @@ import (
 	"strconv"
 	"strings"
 
-	"code.google.com/p/digest2/go/bin"
+	"digest2/bin"
 )
 
-const parentImport = "code.google.com/p/digest2/go"
+const parentImport = "digest2"
 const versionString = "muk version 0.1 Go source"
 const copyrightString = "(c) 2012 Sonia Keys."
 const aofn = "astorb.dat"
