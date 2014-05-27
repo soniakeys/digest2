@@ -1,7 +1,3 @@
-// Copyright 2010-2012 Sonia Keys
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file.
-
 // Package bin defines the bin model used by digest2 and two utility programs
 // muk and s3mbin.
 package bin

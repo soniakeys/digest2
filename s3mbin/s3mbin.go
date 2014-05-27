@@ -1,7 +1,3 @@
-// Copyright 2010-2012 Sonia Keys
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file.
-
 /*
 Command s3mbin generates a file, s3m.dat, for use by the program muk.
 

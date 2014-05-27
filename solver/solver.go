@@ -1,7 +1,3 @@
-// Copyright 2010-2012 Sonia Keys
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file.
-
 // Package d2solver implements the digest2 algorithm.
 package d2solver
 

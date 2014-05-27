@@ -1,7 +1,3 @@
-// Copyright 2010-2012 Sonia Keys
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file.
-
 // Package coord implements 3D cartesian and 2D sky coordinates.
 //
 // The method sets are not comprehensive, but include what has been
