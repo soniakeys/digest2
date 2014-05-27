@@ -3,19 +3,17 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go/build"
 	"io/ioutil"
 	"log"
 	"math"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
 
 const parentImport = "digest2"
 const versionString = "mcc version 0.1"
-const copyrightString = "(c) 2012 Sonia Keys."
+const copyrightString = "Public domain, Smithsonian Astrophysical Observatory."
 
 var col int
 var ignored int
@@ -35,12 +33,8 @@ For full documentation:
 	vers := flag.Bool("v", false, "display version and copyright")
 	flag.Parse()
 	if *vers {
-		fmt.Println(versionString, copyrightString)
-		l := "LICENSE"
-		if p, err := build.Import(parentImport, "", build.FindOnly); err == nil {
-			l = filepath.Join(p.Dir, l)
-		}
-		fmt.Println("See", l)
+		fmt.Println(versionString)
+		fmt.Println(copyrightString)
 		os.Exit(0)
 	}
 	if n := flag.NArg(); n < 2 || n > 3 {

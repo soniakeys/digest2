@@ -47,8 +47,8 @@ import (
 )
 
 const parentImport = "digest2"
-const versionString = "s3mbin version 0.1 Go source"
-const copyrightString = "(c) 2012 Sonia Keys."
+const versionString = "s3mbin version 0.1 Go source."
+const copyrightString = "Public domain, Smithsonian Astrophysical Observatory."
 
 type fatal struct {
 	err error
@@ -209,12 +209,8 @@ For full documentation:
 	vers := flag.Bool("v", false, "display version and copyright")
 	flag.Parse()
 	if *vers {
-		fmt.Println(versionString, copyrightString)
-		l := "LICENSE"
-		if parentDir > "" {
-			l = filepath.Join(parentDir, l)
-		}
-		fmt.Println("See", l)
+		fmt.Println(versionString)
+		fmt.Println(copyrightString)
 		os.Exit(0)
 	}
 

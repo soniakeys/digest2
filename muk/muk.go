@@ -20,8 +20,8 @@ import (
 )
 
 const parentImport = "digest2"
-const versionString = "muk version 0.1 Go source"
-const copyrightString = "(c) 2012 Sonia Keys."
+const versionString = "muk version 0.1 Go source."
+const copyrightString = "Public domain, Smithsonian Astrophysical Observatory."
 const aofn = "astorb.dat"
 
 type fatal struct {
@@ -77,12 +77,8 @@ For full documentation:
 	vers := flag.Bool("v", false, "display version and copyright")
 	flag.Parse()
 	if *vers {
-		fmt.Println(versionString, copyrightString)
-		l := "LICENSE"
-		if parentDir > "" {
-			l = filepath.Join(parentDir, l)
-		}
-		fmt.Println("See", l)
+		fmt.Println(versionString)
+		fmt.Println(copyrightString)
 		os.Exit(0)
 	}
 	if flag.NArg() > 0 {

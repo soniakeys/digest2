@@ -25,8 +25,8 @@ import (
 )
 
 const parentImport = "digest2"
-const versionString = "Digest2 version 0.15 Go source"
-const copyrightString = "(c) 2013 Sonia Keys."
+const versionString = "digest2 version 0.16 Go source."
+const copyrightString = "Public domain, Smithsonian Astrophysical Observatory."
 
 type fatal struct {
 	err interface{}
@@ -323,12 +323,8 @@ Default:
 		printHelp()
 		os.Exit(0)
 	case *dv:
-		fmt.Println(versionString, copyrightString)
-		l := "LICENSE"
-		if ppErr == nil {
-			l = filepath.Join(pp.Dir, l)
-		}
-		fmt.Println("See", l)
+		fmt.Println(versionString)
+		fmt.Println(copyrightString)
 		os.Exit(0)
 	case flag.NArg() != 1:
 		flag.Usage()
