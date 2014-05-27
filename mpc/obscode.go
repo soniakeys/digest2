@@ -52,13 +52,13 @@ func FetchOcd(ocdFile string) error {
 // to parallax constants.
 //
 // If rhoCosPhi and rhoSinPhi both == 0, nil is stored as the map value.
-func ReadOcd(ocdFile string) (obs.ParallaxMap, error) {
+func ReadOcd(ocdFile string) (observation.ParallaxMap, error) {
 	b, err := ioutil.ReadFile(ocdFile)
 	if err != nil {
 		return nil, err
 	}
 
-	ocdMap := make(obs.ParallaxMap)
+	ocdMap := make(observation.ParallaxMap)
 	var longitude, rhoCosPhi, rhoSinPhi float64
 
 	for _, line := range strings.Split(string(b), "\n") {
@@ -105,7 +105,7 @@ func ReadOcd(ocdFile string) (obs.ParallaxMap, error) {
 			ocdMap[line[0:3]] = nil
 		} else {
 			ocdMap[line[0:3]] =
-				&obs.ParallaxConst{
+				&observation.ParallaxConst{
 					Longitude: longitude,
 					RhoCosPhi: rhoCosPhi,
 					RhoSinPhi: rhoSinPhi,

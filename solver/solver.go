@@ -32,7 +32,7 @@ func New(all, unk bin.Model, classCompute []int,
 // Rms returned is based on residuals of all observations in the tracklet
 // against fitted linear great circle motion.
 // Digest2 scores are returned in the slice classScores.
-func (s *D2Solver) Solve(otk *obs.Tracklet, vmag float64,
+func (s *D2Solver) Solve(otk *observation.Tracklet, vmag float64,
 	rnd Rand) (rms float64, classScores []Scores) {
 
 	tk := s.newTracklet(otk, vmag, rnd) // create workspace
@@ -49,7 +49,7 @@ type Scores struct {
 type tracklet struct {
 	// inputs.  tracket constructed with these
 	solver *D2Solver
-	otk    *obs.Tracklet
+	otk    *observation.Tracklet
 	vmag   float64
 	rnd    Rand
 
@@ -59,7 +59,7 @@ type tracklet struct {
 
 	cs []*classStats
 
-	first, last obs.VObs // obs used for motion vector
+	first, last observation.VObs // obs used for motion vector
 
 	// observational error associated with first, last of motion vector
 	firstObsErr, lastObsErr float64
@@ -95,7 +95,7 @@ type tracklet struct {
 	hv, v coord.Cart
 }
 
-func (s *D2Solver) newTracklet(otk *obs.Tracklet, vmag float64,
+func (s *D2Solver) newTracklet(otk *observation.Tracklet, vmag float64,
 	rnd Rand) *tracklet {
 
 	t := &tracklet{
@@ -199,7 +199,7 @@ func (tk *tracklet) score() {
 
 // setSOV sets sun-observer vectors in ecliptic coordinates in the tracklet
 // struct.  also sets soe, coe.
-func (tk *tracklet) sov(o obs.VObs) (sunObserver coord.Cart) {
+func (tk *tracklet) sov(o observation.VObs) (sunObserver coord.Cart) {
 	var sunEarth, earthSite coord.Cart
 	sunEarth, tk.soe, tk.coe = astro.Se2000(o.Meas().Mjd)
 	earthSite = o.EarthObserverVect()
@@ -269,7 +269,11 @@ func (tk *tracklet) offsetMotionVector(rx, dx float64) {
 }
 
 // setOOUV solves observerObject unit vector for sky coordinates.
-func (tk *tracklet) oouv(sky *obs.VMeas, obsErr float64, rx, dx float64) (observerObjectUnit coord.Cart) {
+func (tk *tracklet) oouv(
+	sky *observation.VMeas,
+	obsErr float64,
+	rx, dx float64,
+) (observerObjectUnit coord.Cart) {
 	sdec, cdec := math.Sincos(sky.Dec + dx*obsErr*.5)
 	sra, cra := math.Sincos(sky.Sphr.Ra + rx*obsErr*.5*cdec)
 	observerObjectUnit = coord.Cart{

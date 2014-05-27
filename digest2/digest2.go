@@ -80,7 +80,7 @@ func main() {
 	// splitTracklets, running as a separate goroutine.  If splitTracklets
 	// encounters an error reading the file, it reports the error on errCh
 	// and terminates immediately.
-	tkChIn := make(chan *obs.Tracklet)
+	tkChIn := make(chan *observation.Tracklet)
 	errCh := make(chan error)
 	go mpc.SplitTracklets(f, ocdMap, tkChIn, errCh)
 
@@ -151,7 +151,7 @@ func main() {
 }
 
 type tkSeq struct {
-	tk  *obs.Tracklet
+	tk  *observation.Tracklet
 	rch chan string
 }
 
@@ -334,7 +334,7 @@ Default:
 	return &cl
 }
 
-func readOcd(cl *commandLine) obs.ParallaxMap {
+func readOcd(cl *commandLine) observation.ParallaxMap {
 	ocdFile := cl.fixupCP(cl.do, "digest2.obscodes")
 	ocdMap, readErr := mpc.ReadOcd(ocdFile)
 	if readErr == nil {
@@ -357,7 +357,7 @@ type outputOptions struct {
 	classColumn                             []int
 }
 
-func readConfig(cl *commandLine, ocdMap obs.ParallaxMap) (classCompute []int, repeatable bool,
+func readConfig(cl *commandLine, ocdMap observation.ParallaxMap) (classCompute []int, repeatable bool,
 	obsErrMap map[string]float64, obsErrDefault float64,
 	opt *outputOptions) {
 	// default observational error = 1 arc sec
@@ -402,7 +402,7 @@ func readConfig(cl *commandLine, ocdMap obs.ParallaxMap) (classCompute []int, re
 		}
 		// replace or remove this check if code is changed in
 		// mpc.obs80.ParseObs80 to do something more advanced
-		// with obs.VMeas.Qual
+		// with observation.VMeas.Qual
 		_, ok := ocdMap[ss[1]]
 		if !ok {
 			return "Obscode not recognized."

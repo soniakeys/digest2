@@ -11,7 +11,7 @@ import (
 // twoObs computes two observations suitable for computing motion vector.
 // in the process it also computes an rms of great circle residuals.
 //
-// at least two obs must be in  tk.obs.  tk.rms is set to the rms over
+// at least two obs must be in  tk.observation.  tk.rms is set to the rms over
 // the whole tracklet.  Return values firstRms and lastRms will be
 // non-zero if a GC fit applies to the corresponding motion vector endpoint.
 func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
@@ -39,15 +39,15 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 	// any space based observations are present
 	allSameSite := true
 	var ok, spaceBased bool
-	var site0 *obs.SiteObs
-	var par0 *obs.ParallaxConst
-	if site0, ok = tk.first.(*obs.SiteObs); ok {
+	var site0 *observation.SiteObs
+	var par0 *observation.ParallaxConst
+	if site0, ok = tk.first.(*observation.SiteObs); ok {
 		par0 = site0.Par
 	} else {
 		spaceBased = true
 	}
 	for _, o := range arc[1:] {
-		if s, ok := o.(*obs.SiteObs); ok {
+		if s, ok := o.(*observation.SiteObs); ok {
 			if s.Par != par0 {
 				allSameSite = false
 			}
@@ -71,9 +71,9 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 		return
 	}
 	// from here on, obs are known to be all ground based.
-	// type assertions to *obs.SiteObs are guaranteed to work.
+	// type assertions to *observation.SiteObs are guaranteed to work.
 	// site0 is already computed.  siteLast is handy now.
-	siteLast := arc[len(arc)-1].(*obs.SiteObs)
+	siteLast := arc[len(arc)-1].(*observation.SiteObs)
 
 	// compute times t17 and t83 at these points of interest.
 	// the times will be used in a few different ways.
@@ -87,7 +87,7 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 	//    => use gc fit of whole arc and synthesize obs at the 17th
 	//    and 83rd percentile times.  first, last rms same as tracklet.
 	if allSameSite && siteLast.Mjd-site0.Mjd < .125 {
-		so := &obs.SiteObs{
+		so := &observation.SiteObs{
 			VMeas: site0.VMeas,
 			Par:   par0,
 		}
@@ -95,7 +95,7 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 		so.VMeas.Sphr = *lmf.Pos(t17)
 		tk.first = so
 
-		so = &obs.SiteObs{
+		so = &observation.SiteObs{
 			VMeas: siteLast.VMeas,
 			Par:   par0,
 		}
@@ -108,7 +108,7 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 
 	// remaining case is involved.  not appropriate to gc fit the entire
 	// arc, but probably possible to derive better endpoints than just
-	// first and last obs.
+	// first and last observation.
 
 	// first step is to split off initial and final arcs, each arc being
 	// all the same code and < 3hrs, but otherwise being as long as possible.
@@ -123,7 +123,7 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 	t1 := site1.Mjd
 	t2 := site2.Mjd
 	for {
-		s1next := arc[o1+1].(*obs.SiteObs)
+		s1next := arc[o1+1].(*observation.SiteObs)
 		dt1 := s1next.Mjd - t1
 		if s1next.Par != par1 || dt1 > .125 {
 			// initial arc is done, just try to extend final arc
@@ -132,7 +132,7 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 				if o == o1 {
 					break
 				}
-				s2prev := arc[o].(*obs.SiteObs)
+				s2prev := arc[o].(*observation.SiteObs)
 				if s2prev.Par != par2 || t2-s2prev.Mjd > .125 {
 					break
 				}
@@ -140,7 +140,7 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 			}
 			break
 		}
-		s2prev := arc[o2-1].(*obs.SiteObs)
+		s2prev := arc[o2-1].(*observation.SiteObs)
 		dt2 := t2 - s2prev.Mjd
 		if s2prev.Par != par2 || dt2 > .125 {
 			// final arc is done, just try to extend initial arc
@@ -149,7 +149,7 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 				if o == o2 {
 					break
 				}
-				s1next := arc[o].(*obs.SiteObs)
+				s1next := arc[o].(*observation.SiteObs)
 				if s1next.Par != par1 || s1next.Mjd-t1 > .125 {
 					break
 				}
@@ -174,9 +174,14 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 	return
 }
 
-func oneObs(o1, o2 int, arcsUseAllObs bool, pt float64, arc []obs.VObs) (result *obs.SiteObs, rms float64) {
+func oneObs(
+	o1, o2 int,
+	arcsUseAllObs bool,
+	pt float64,
+	arc []observation.VObs,
+) (result *observation.SiteObs, rms float64) {
 	// a default result. (again, arc is guaranteed to be all ground based)
-	result = arc[o1].(*obs.SiteObs)
+	result = arc[o1].(*observation.SiteObs)
 
 	// case 1.  simple, only a single obs for the "arc".
 	if o1 == o2 {
@@ -192,7 +197,7 @@ func oneObs(o1, o2 int, arcsUseAllObs bool, pt float64, arc []obs.VObs) (result 
 			var dt float64
 			end := result
 			if o1 == 0 {
-				end = arc[1].(*obs.SiteObs)
+				end = arc[1].(*observation.SiteObs)
 				dt = end.Mjd - pt
 			} else {
 				dt = pt - end.Mjd
@@ -204,7 +209,7 @@ func oneObs(o1, o2 int, arcsUseAllObs bool, pt float64, arc []obs.VObs) (result 
 
 		// case 2.2.  linearly interpolate along the great circle
 		// connecting the points.
-		r2 := *(arc[o2].(*obs.SiteObs))
+		r2 := *(arc[o2].(*observation.SiteObs))
 		t := make([]float64, 2)
 		s := make(coord.SphrS, 2)
 		t[0] = result.Mjd
@@ -229,14 +234,14 @@ func oneObs(o1, o2 int, arcsUseAllObs bool, pt float64, arc []obs.VObs) (result 
 	if arcsUseAllObs {
 		// median time of arc
 		is := (o1 + o2) / 2
-		tr = arc[is].(*obs.SiteObs).Mjd
+		tr = arc[is].(*observation.SiteObs).Mjd
 		if is+is < o1+o2 {
-			tr = (tr + arc[is+1].(*obs.SiteObs).Mjd) * .5
+			tr = (tr + arc[is+1].(*observation.SiteObs).Mjd) * .5
 		}
 	} else {
 		var dt float64
 		if o1 == 0 {
-			result = arc[o2].(*obs.SiteObs)
+			result = arc[o2].(*observation.SiteObs)
 			dt = result.Mjd - pt
 		} else {
 			dt = pt - result.Mjd
@@ -253,7 +258,7 @@ func oneObs(o1, o2 int, arcsUseAllObs bool, pt float64, arc []obs.VObs) (result 
 	t := make([]float64, np)
 	s := make(coord.SphrS, np)
 	for i, v := range arc[o1 : o2+1] {
-		m := v.(*obs.SiteObs)
+		m := v.(*observation.SiteObs)
 		t[i] = m.Mjd
 		s[i] = m.Sphr
 	}

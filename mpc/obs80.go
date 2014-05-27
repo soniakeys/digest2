@@ -18,8 +18,8 @@ import (
 //
 // Input line80 must be a string of 80 characters.  Other lengths are an error.
 // The observatory code in columns 78-80 must exist in the input map.
-func ParseObs80(line80 string, ocm obs.ParallaxMap) (desig string,
-	o obs.VObs, err error) {
+func ParseObs80(line80 string, ocm observation.ParallaxMap) (desig string,
+	o observation.VObs, err error) {
 	if len(line80) != 80 {
 		err = errors.New("ParseObs80 requires 80 characters")
 		return
@@ -95,9 +95,9 @@ func ParseObs80(line80 string, ocm obs.ParallaxMap) (desig string,
 	obscode := string([]byte(line80[77:80]))
 
 	if par == nil || line80[14] == 'S' {
-		o = &obs.SatObs{Sat: obscode}
+		o = &observation.SatObs{Sat: obscode}
 	} else {
-		o = &obs.SiteObs{Par: par}
+		o = &observation.SiteObs{Par: par}
 	}
 	m := o.Meas()
 	m.Mjd = mjd
@@ -133,7 +133,7 @@ func parseDate(line80 string) float64 {
 	return float64(m) + day
 }
 
-func parseMpcSat2(line80, desig string, s1 *obs.SatObs) {
+func parseMpcSat2(line80, desig string, s1 *observation.SatObs) {
 	if desig != strings.TrimSpace(line80[:12]) {
 		return
 	}
@@ -190,13 +190,13 @@ func parseMpcOffset(off string) (float64, bool) {
 // Parse errors are not fatal.  They are quietly ignored.
 // Lines causing parse errors and lines not forming valid tracklets are
 // unceremoniously dropped.
-func SplitTracklets(iObs io.Reader, ocdMap obs.ParallaxMap,
-	tkCh chan *obs.Tracklet, errCh chan error) {
+func SplitTracklets(iObs io.Reader, ocdMap observation.ParallaxMap,
+	tkCh chan *observation.Tracklet, errCh chan error) {
 	bf := bufio.NewReader(iObs)
 	var des0 string
-	var o obs.VObs
+	var o observation.VObs
 	var desig string
-	obuf := make([]obs.VObs, 0, 4)
+	obuf := make([]observation.VObs, 0, 4)
 	for {
 		bLine, pre, err := bf.ReadLine()
 		if err == io.EOF {
@@ -215,7 +215,7 @@ func SplitTracklets(iObs io.Reader, ocdMap obs.ParallaxMap,
 		}
 		line := string(bLine)
 		if line[14] == 's' {
-			if s, ok := o.(*obs.SatObs); ok {
+			if s, ok := o.(*observation.SatObs); ok {
 				parseMpcSat2(line, desig, s)
 			}
 			continue
@@ -242,7 +242,11 @@ func SplitTracklets(iObs io.Reader, ocdMap obs.ParallaxMap,
 
 // checks that observations make a valid tracklet,
 // allocates and sends the tracklet.
-func sendValid(desig string, obuf []obs.VObs, tkCh chan *obs.Tracklet) {
+func sendValid(
+	desig string,
+	obuf []observation.VObs,
+	tkCh chan *observation.Tracklet,
+) {
 	if len(obuf) < 2 {
 		return
 	}
@@ -262,8 +266,8 @@ func sendValid(desig string, obuf []obs.VObs, tkCh chan *obs.Tracklet) {
 	if first.Ra == last.Ra && first.Dec == last.Dec {
 		return
 	}
-	tkCh <- &obs.Tracklet{
+	tkCh <- &observation.Tracklet{
 		Desig: desig,
-		Obs:   append([]obs.VObs{}, obuf...),
+		Obs:   append([]observation.VObs{}, obuf...),
 	}
 }
