@@ -164,7 +164,7 @@ func isInnerMB(q, e, i, h float64) bool {
 	return a < 2.5 && a > 2.1 && i < ((a-2.1)/.4)*10+7
 }
 
-// Hansas 
+// Hansas
 // 2.55<a<2.72 e<.25, 20<i<23.5
 func isHansa(q, e, i, h float64) bool {
 	if e > .25 || i < 20 || i > 23.5 {
@@ -204,7 +204,7 @@ func isOuterMB(q, e, i, h float64) bool {
 	return a > 2.8 && a < 3.25 && i < ((a-2.8)/.45)*16+20
 }
 
-// Hildas 
+// Hildas
 // 3.9<a<4.02, e<.4, i<18
 func isHilda(q, e, i, h float64) bool {
 	if i > 18 || e > .4 {

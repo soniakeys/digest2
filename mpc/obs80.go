@@ -25,7 +25,7 @@ func ParseObs80(line80 string, ocm obs.ParallaxMap) (desig string,
 		return
 	}
 
-	// the intent of reallocating desig (and later, obscode) is 
+	// the intent of reallocating desig (and later, obscode) is
 	// to allow line80 to be garbage collected sooner. no idea it really helps.
 	desig = string([]byte(strings.TrimSpace(line80[:12])))
 

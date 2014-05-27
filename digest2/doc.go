@@ -1,6 +1,6 @@
 /*
 Command digest2 uses statistical ranging techniques to compute chances that an
-object is of various orbit classes.  
+object is of various orbit classes.
 
 Contents
 
@@ -43,7 +43,7 @@ Here are a few observations of known NEOs (with made up designations.)
      NE00269  C2003 01 06.52850 12 40 50.71 +18 27 46.1          21.8 Vd     291
      NE00269  C2003 01 06.54359 12 40 51.68 +18 27 42.5          21.9 Vd     291
 
-You put them in a file, say fmo.obs, then type "digest2 fmo.obs" and 
+You put them in a file, say fmo.obs, then type "digest2 fmo.obs" and
 get the following output:
 
   Digest2 version 0.15 Go source

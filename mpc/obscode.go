@@ -47,7 +47,7 @@ func FetchOcd(ocdFile string) error {
 // Note that files obtained from that OcdUrl have column headings and
 // an enclosing <pre> tag.  This function does not require these lines;
 // it quietly ignores lines that do not parse as data.
-// 
+//
 // Input is a file name, output is a map from 3-character MPC obs codes
 // to parallax constants.
 //

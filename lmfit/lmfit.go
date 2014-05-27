@@ -185,7 +185,7 @@ func (lmf *LmFit) Res() coord.SphrS {
 }
 
 // RmsRes returns rms of 2d residual and the component ra and dec residuals.
-//  
+//
 // Note:  The 2d residual is the 2d distance between computed and observed.
 // By contrast, it is not the rms of the ra and dec residuals considered as
 // separate values.  (The 2d distance that this function returns is smaller
