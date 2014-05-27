@@ -5,7 +5,7 @@ package obs
 import (
 	"math"
 
-	"digest2/astro"
+	"astro"
 	"coord"
 )
 

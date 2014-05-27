@@ -4,9 +4,9 @@ package d2solver
 import (
 	"math"
 
-	"digest2/astro"
-	"digest2/bin"
+	"astro"
 	"coord"
+	"digest2/bin"
 	"digest2/obs"
 )
 
@@ -305,7 +305,7 @@ func (tk *tracklet) solveDistanceDependentVectors(d float64) {
 
 // dRange explores possible orbit space
 //
-// recursive tracklet method 
+// recursive tracklet method
 //
 // Args:
 //   tk:          tracklet
@@ -315,13 +315,13 @@ func (tk *tracklet) solveDistanceDependentVectors(d float64) {
 //
 // Algorithm:
 //   much like aRange
-//  
+//
 //   - if new bins were found at mid point, recurse both halves
 //
 //   - if range is big, recurse anyway
 //
 //   - if young, recurse
-//  
+//
 func (tk *tracklet) dRange(d1, d2 float64, age int) {
 	dmid := (d1 + d2) * .5
 
