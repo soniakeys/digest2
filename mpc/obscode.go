@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"digest2/obs"
+	"observation"
 )
 
 // OcdUrl links to the present location of the file known as obscode.dat,

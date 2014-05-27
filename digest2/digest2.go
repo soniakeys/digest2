@@ -20,8 +20,8 @@ import (
 
 	"digest2/bin"
 	"digest2/mpc"
-	"digest2/obs"
 	"digest2/solver"
+	"observation"
 )
 
 const parentImport = "digest2"

@@ -7,7 +7,7 @@ import (
 	"astro"
 	"coord"
 	"digest2/bin"
-	"digest2/obs"
+	"observation"
 )
 
 // D2Solver contains data and parameters needed for the digest2 algorithm.

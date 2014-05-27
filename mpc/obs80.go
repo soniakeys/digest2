@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"coord"
-	"digest2/obs"
+	"observation"
 )
 
 // ParseObs80 parses a single line observation in the MPC 80 column format.
