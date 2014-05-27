@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"digest2/coord"
+	"coord"
 	"digest2/obs"
 )
 

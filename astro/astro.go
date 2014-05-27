@@ -4,7 +4,7 @@ package astro
 import (
 	"math"
 
-	"digest2/coord"
+	"coord"
 )
 
 const (

@@ -4,7 +4,7 @@ package lmfit
 import (
 	"math"
 
-	"digest2/coord"
+	"coord"
 )
 
 const (

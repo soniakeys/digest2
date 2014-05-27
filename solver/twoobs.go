@@ -3,7 +3,7 @@ package d2solver
 import (
 	"math"
 
-	"digest2/coord"
+	"coord"
 	"digest2/lmfit"
 	"digest2/obs"
 )

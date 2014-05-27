@@ -6,7 +6,7 @@ import (
 
 	"digest2/astro"
 	"digest2/bin"
-	"digest2/coord"
+	"coord"
 	"digest2/obs"
 )
 

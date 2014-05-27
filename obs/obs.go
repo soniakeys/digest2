@@ -6,7 +6,7 @@ import (
 	"math"
 
 	"digest2/astro"
-	"digest2/coord"
+	"coord"
 )
 
 // VMeas represents a "visual" measurment in units convenient for computations.
