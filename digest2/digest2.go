@@ -19,8 +19,8 @@ import (
 	"time"
 
 	"digest2/bin"
-	"digest2/mpc"
 	"digest2/solver"
+	"mpcformat"
 	"observation"
 )
 
@@ -82,7 +82,7 @@ func main() {
 	// and terminates immediately.
 	tkChIn := make(chan *observation.Tracklet)
 	errCh := make(chan error)
-	go mpc.SplitTracklets(f, ocdMap, tkChIn, errCh)
+	go mpcformat.SplitTracklets(f, ocdMap, tkChIn, errCh)
 
 	// prCh is used to keep processed results in submission order.
 	// it is a buffered channel so that a fast worker can drop off the
@@ -336,17 +336,17 @@ Default:
 
 func readOcd(cl *commandLine) observation.ParallaxMap {
 	ocdFile := cl.fixupCP(cl.do, "digest2.obscodes")
-	ocdMap, readErr := mpc.ReadOcd(ocdFile)
+	ocdMap, readErr := mpcformat.ReadObscodeDat(ocdFile)
 	if readErr == nil {
 		return ocdMap
 	}
 	// that didn't work.  try getting a fresh copy.
-	if err := mpc.FetchOcd(ocdFile); err != nil {
+	if err := mpcformat.FetchOcd(ocdFile); err != nil {
 		log.Println(readErr) // show error from read attempt,
 		exit(err)            // and error from download attempt
 	}
 	// retry with downloaded file.  see if this copy works better
-	if ocdMap, readErr = mpc.ReadOcd(ocdFile); readErr != nil {
+	if ocdMap, readErr = mpcformat.ReadObscodeDat(ocdFile); readErr != nil {
 		exit(readErr)
 	}
 	return ocdMap
@@ -401,7 +401,7 @@ func readConfig(cl *commandLine, ocdMap observation.ParallaxMap) (classCompute [
 			return ""
 		}
 		// replace or remove this check if code is changed in
-		// mpc.obs80.ParseObs80 to do something more advanced
+		// mpcformat.obs80.ParseObs80 to do something more advanced
 		// with observation.VMeas.Qual
 		_, ok := ocdMap[ss[1]]
 		if !ok {
