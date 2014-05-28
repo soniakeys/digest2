@@ -569,7 +569,7 @@ Orbit classes:`)
 	}
 	fmt.Println(`
 For full documentation:
-   go doc ` + parentImport + `/digest2`)
+   godoc digest2`)
 }
 
 //  reads population model (created by muk)
