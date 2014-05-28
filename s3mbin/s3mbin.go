@@ -43,7 +43,7 @@ import (
 	"strconv"
 	"strings"
 
-	"digest2/bin"
+	"d2bin"
 )
 
 const parentImport = "digest2"
@@ -71,20 +71,20 @@ func handleFatal() {
 // The partitions in each dimension vary in size.
 
 func init() {
-	bin.QPart = []float64{.4, .7, .8, .9, 1, 1.1, 1.2, 1.3,
+	d2bin.QPart = []float64{.4, .7, .8, .9, 1, 1.1, 1.2, 1.3,
 		1.4, 1.5, 1.67, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 3,
 		3.2, 3.5, 4, 4.5, 5, 5.5, 10, 20, 30, 40, 100}
-	bin.EPart = []float64{.1, .2, .3, .4, .5, .7, .9, 1.1}
-	bin.IPart = []float64{2, 5, 10, 15, 20, 25, 30, 40, 60, 90, 180}
-	bin.HPart = []float64{6, 8, 10, 11, 12, 13, 14, 15,
+	d2bin.EPart = []float64{.1, .2, .3, .4, .5, .7, .9, 1.1}
+	d2bin.IPart = []float64{2, 5, 10, 15, 20, 25, 30, 40, 60, 90, 180}
+	d2bin.HPart = []float64{6, 8, 10, 11, 12, 13, 14, 15,
 		16, 17, 18, 19, 20, 21, 22, 23, 24, 25.5}
-	bin.MSize = len(bin.QPart) * len(bin.EPart) *
-		len(bin.IPart) * len(bin.HPart)
-	bin.LastH = len(bin.HPart) - 1
+	d2bin.MSize = len(d2bin.QPart) * len(d2bin.EPart) *
+		len(d2bin.IPart) * len(d2bin.HPart)
+	d2bin.LastH = len(d2bin.HPart) - 1
 }
 
-func readPart(fCh chan string, mCh chan *bin.Model) {
-	m := bin.New()
+func readPart(fCh chan string, mCh chan *d2bin.Model) {
+	m := d2bin.New()
 	for f := range fCh {
 		binS3m(m, f, f != "S0")
 	}
@@ -93,10 +93,10 @@ func readPart(fCh chan string, mCh chan *bin.Model) {
 
 var nl bool
 var nOrbits, nModel int
-var nClass = make([]int, len(bin.CList))
+var nClass = make([]int, len(d2bin.CList))
 var s3mPath string
 
-func binS3m(m *bin.Model, fn string, clipNeo bool) {
+func binS3m(m *d2bin.Model, fn string, clipNeo bool) {
 	fn = filepath.Join(s3mPath, fn+".s3m")
 	if nl {
 		fmt.Println()
@@ -152,11 +152,11 @@ loop:
 		if clipNeo && q < 1.3 {
 			goto read // bad data
 		}
-		if iq, ie, ii, ih, inModel := bin.Qeih(q, e, i, h); inModel {
+		if iq, ie, ii, ih, inModel := d2bin.Qeih(q, e, i, h); inModel {
 			nModel++
-			x := bin.Mx(iq, ie, ii, ih)
+			x := d2bin.Mx(iq, ie, ii, ih)
 			m.SS[x]++
-			for c, cs := range bin.CList {
+			for c, cs := range d2bin.CList {
 				if cs.IsClass(q, e, i, h) {
 					nClass[c]++
 					m.Class[c][x]++
@@ -228,7 +228,7 @@ For full documentation:
 		outDir = filepath.Join(parentDir, "muk")
 	}
 	if outFile == "" {
-		outFile = bin.Sfn
+		outFile = d2bin.Sfn
 	}
 
 	// determine s3m directory
@@ -253,7 +253,7 @@ For full documentation:
 
 	// start a number of file readers in parallel.
 	// each returns a data set on mCh
-	mCh := make(chan *bin.Model)
+	mCh := make(chan *d2bin.Model)
 	nProc := runtime.GOMAXPROCS(0)
 	if nProc > len(s3mFiles) {
 		nProc = len(s3mFiles)
@@ -263,7 +263,7 @@ For full documentation:
 	}
 
 	// combine data sets from readers
-	s3m := bin.New()
+	s3m := d2bin.New()
 	for i := 0; i < nProc; i++ {
 		mp := <-mCh
 		for x, c := range mp.SS {
@@ -284,7 +284,7 @@ For full documentation:
 	fmt.Println(nOrbits, "orbits")
 	fmt.Println(nModel, "in model")
 	for c, nc := range nClass {
-		fmt.Printf("%8d %s\n", nc, bin.CList[c].Heading)
+		fmt.Printf("%8d %s\n", nc, d2bin.CList[c].Heading)
 	}
 
 	// write results
@@ -298,25 +298,25 @@ For full documentation:
 	}
 
 	f.WriteString("\nq")
-	for _, part := range bin.QPart {
+	for _, part := range d2bin.QPart {
 		fmt.Fprintf(f, " %g", part) // ignore errors in the middle
 	}
 	f.WriteString("\ne")
-	for _, part := range bin.EPart {
+	for _, part := range d2bin.EPart {
 		fmt.Fprintf(f, " %g", part)
 	}
 	f.WriteString("\ni")
-	for _, part := range bin.IPart {
+	for _, part := range d2bin.IPart {
 		fmt.Fprintf(f, " %g", part)
 	}
 	f.WriteString("\nh")
-	for _, part := range bin.HPart {
+	for _, part := range d2bin.HPart {
 		fmt.Fprintf(f, " %g", part)
 	}
 	f.WriteString("\n")
 
 	for i := 0; i < len(s3m.SS); {
-		for _ = range bin.HPart {
+		for _ = range d2bin.HPart {
 			fmt.Fprintf(f, "%g ", s3m.SS[i])
 			i++
 		}
@@ -324,9 +324,9 @@ For full documentation:
 	}
 
 	for cx, class := range s3m.Class {
-		fmt.Fprintf(f, "%s\n", bin.CList[cx].Heading)
+		fmt.Fprintf(f, "%s\n", d2bin.CList[cx].Heading)
 		for i := 0; i < len(class); {
-			for _ = range bin.HPart {
+			for _ = range d2bin.HPart {
 				fmt.Fprintf(f, "%g ", class[i])
 				i++
 			}

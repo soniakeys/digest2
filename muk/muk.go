@@ -16,7 +16,7 @@ import (
 	"strconv"
 	"strings"
 
-	"digest2/bin"
+	"d2bin"
 )
 
 const parentImport = "digest2"
@@ -52,7 +52,7 @@ func main() {
 		mukDir = pkg.Dir
 	}
 	// parent dir of muk and digest2.  location for LICENSE, also location
-	// for output file digest2.gmodel (bin.Mfn)
+	// for output file digest2.gmodel (d2bin.Mfn)
 	parentDir := ""
 	if pkg, err := build.Import(parentImport, "", build.FindOnly); err == nil {
 		parentDir = pkg.Dir
@@ -144,12 +144,12 @@ This process is often time consuming.
 	}
 
 	// S3M file required to be in muk directory.
-	sPath := filepath.Join(mukDir, bin.Sfn)
+	sPath := filepath.Join(mukDir, d2bin.Sfn)
 
 	// in a small conflation of features, status messages show only file names
 	// if the default is used for astorb.dat, and full paths otherwise
 	if astorbPath == defPath {
-		fmt.Println("Reading", bin.Sfn)
+		fmt.Println("Reading", d2bin.Sfn)
 	} else {
 		fmt.Println("Reading", sPath)
 	}
@@ -166,7 +166,7 @@ This process is often time consuming.
 			log.Println(i)
 		}
 		f.Close()
-		exit(fmt.Errorf("%s corrupt. line %d", bin.Sfn, ln))
+		exit(fmt.Errorf("%s corrupt. line %d", d2bin.Sfn, ln))
 	}
 	mustRead := func() string {
 		ln++
@@ -198,17 +198,17 @@ This process is often time consuming.
 		}
 		return part
 	}
-	bin.QPart = readPart('q')
-	bin.EPart = readPart('e')
-	bin.IPart = readPart('i')
-	bin.HPart = readPart('h')
-	bin.LastH = len(bin.HPart) - 1
-	bin.MSize = len(bin.QPart) * len(bin.EPart) * len(bin.IPart) * len(bin.HPart)
+	d2bin.QPart = readPart('q')
+	d2bin.EPart = readPart('e')
+	d2bin.IPart = readPart('i')
+	d2bin.HPart = readPart('h')
+	d2bin.LastH = len(d2bin.HPart) - 1
+	d2bin.MSize = len(d2bin.QPart) * len(d2bin.EPart) * len(d2bin.IPart) * len(d2bin.HPart)
 	readBins := func() []float64 {
-		bins := make([]float64, bin.MSize)
-		for bx := 0; bx < bin.MSize; {
+		bins := make([]float64, d2bin.MSize)
+		for bx := 0; bx < d2bin.MSize; {
 			flds := strings.Fields(mustRead())
-			if len(flds) != len(bin.HPart) {
+			if len(flds) != len(d2bin.HPart) {
 				corrupt(len(flds))
 			}
 			for _, s := range flds {
@@ -222,10 +222,10 @@ This process is often time consuming.
 		}
 		return bins
 	}
-	var s3m bin.Model
+	var s3m d2bin.Model
 	s3m.SS = readBins()
-	s3m.Class = make([][]float64, len(bin.CList))
-	for cx, class := range bin.CList {
+	s3m.Class = make([][]float64, len(d2bin.CList))
+	for cx, class := range d2bin.CList {
 		if mustRead() != class.Heading {
 			corrupt(fmt.Sprintf(`class "%s" expected`, class.Heading))
 		}
@@ -233,7 +233,7 @@ This process is often time consuming.
 	}
 	f.Close()
 
-	known := bin.New()
+	known := d2bin.New()
 	_, aoFile := filepath.Split(astorbPath)
 	if astorbPath == defPath {
 		fmt.Printf("Reading %s...\n", aoFile)
@@ -297,16 +297,16 @@ This process is often time consuming.
 			continue
 		}
 		q := a * (1 - e)
-		iq, ie, ii, ih, inModel := bin.Qeih(q, e, i, h)
+		iq, ie, ii, ih, inModel := d2bin.Qeih(q, e, i, h)
 		if !inModel {
 			outofmodel++
 			continue
 		}
 
 		good++
-		bx := bin.Mx(iq, ie, ii, ih)
+		bx := d2bin.Mx(iq, ie, ii, ih)
 		known.SS[bx]++
-		for c, cs := range bin.CList {
+		for c, cs := range d2bin.CList {
 			if cs.IsClass(q, e, i, h) {
 				known.Class[c][bx]++
 			}
@@ -325,17 +325,17 @@ This process is often time consuming.
 	fmt.Println(good, "orbits usable")
 
 	// from s3m and known, produce all=max(s3m, known)/sqrt(v)
-	// and unk=(all-known)/sqrt(v), where v is the "volume" of the bin.
-	all := bin.New()
-	unk := bin.New()
+	// and unk=(all-known)/sqrt(v), where v is the "volume" of the d2bin.
+	all := d2bin.New()
+	unk := d2bin.New()
 	q0 := 0.
 	x := 0
-	for _, q1 := range bin.QPart {
+	for _, q1 := range d2bin.QPart {
 		dq := q1 - q0
 		q0 = q1
 		e0 := 0.
 		d1 := 1.
-		for _, e1 := range bin.EPart {
+		for _, e1 := range d2bin.EPart {
 			d0 := d1
 			d1 = 1 - e1
 			if d1 < 0 {
@@ -344,11 +344,11 @@ This process is often time consuming.
 			dae := dq * (e1 - e0) / (d0 + d1)
 			e0 = e1
 			i0 := 0.
-			for _, i1 := range bin.IPart {
+			for _, i1 := range d2bin.IPart {
 				daei := dae * (i1 - i0)
 				i0 = i1
 				h0 := 0.
-				for _, h1 := range bin.HPart {
+				for _, h1 := range d2bin.HPart {
 					isqv := 1 / math.Sqrt(daei*(h1-h0))
 					h0 = h1
 					if known.SS[x] > s3m.SS[x] {
@@ -373,13 +373,13 @@ This process is often time consuming.
 			}
 		}
 	}
-	mPath := filepath.Join(parentDir, bin.Mfn)
+	mPath := filepath.Join(parentDir, d2bin.Mfn)
 	fbin, err := os.Create(mPath)
 	if err != nil {
 		exit(err)
 	}
 	if astorbPath == defPath {
-		fmt.Println("Writing", bin.Mfn)
+		fmt.Println("Writing", d2bin.Mfn)
 	} else {
 		fmt.Println("Writing", mPath)
 	}
@@ -390,12 +390,12 @@ This process is often time consuming.
 			exit(err)
 		}
 	}
-	mustEncode(bin.QPart)
-	mustEncode(bin.EPart)
-	mustEncode(bin.IPart)
-	mustEncode(bin.HPart)
-	mustEncode(bin.MSize)
-	mustEncode(bin.LastH)
+	mustEncode(d2bin.QPart)
+	mustEncode(d2bin.EPart)
+	mustEncode(d2bin.IPart)
+	mustEncode(d2bin.HPart)
+	mustEncode(d2bin.MSize)
+	mustEncode(d2bin.LastH)
 	mustEncode(all)
 	mustEncode(unk)
 }

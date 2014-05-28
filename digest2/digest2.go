@@ -18,8 +18,8 @@ import (
 	"strings"
 	"time"
 
-	"digest2/bin"
-	"digest2/solver"
+	"d2bin"
+	"d2solver"
 	"mpcformat"
 	"observation"
 )
@@ -238,7 +238,7 @@ func solve(solver *d2solver.D2Solver,
 			}
 			// then other possibilities
 		clist:
-			for c := range bin.CList {
+			for c := range d2bin.CList {
 				for _, cc := range opt.classColumn {
 					if cc == c {
 						continue clist // already in a column
@@ -253,9 +253,9 @@ func solve(solver *d2solver.D2Solver,
 					pScore = cs.Raw
 				}
 				if pScore > .5 {
-					ol = fmt.Sprintf("%s (%s %.0f)", ol, bin.CList[c].Abbr, pScore)
+					ol = fmt.Sprintf("%s (%s %.0f)", ol, d2bin.CList[c].Abbr, pScore)
 				} else if pScore > 0 {
-					ol = fmt.Sprintf("%s (%s <1)", ol, bin.CList[c].Abbr)
+					ol = fmt.Sprintf("%s (%s <1)", ol, d2bin.CList[c].Abbr)
 				}
 			}
 		} else {
@@ -366,7 +366,7 @@ func readConfig(cl *commandLine, ocdMap observation.ParallaxMap) (classCompute [
 	opt = new(outputOptions)
 	// default configuration
 	opt.classPossible = true
-	classCompute = make([]int, len(bin.CList))
+	classCompute = make([]int, len(d2bin.CList))
 	for i := range classCompute {
 		classCompute[i] = i
 	}
@@ -480,7 +480,7 @@ read:
 			continue
 		}
 		// only valid possibility left is a class name
-		for cx, c := range bin.CList {
+		for cx, c := range d2bin.CList {
 			if ls == c.Abbr || ls == c.Heading {
 				if !classSpec {
 					classSpec = true
@@ -506,7 +506,7 @@ func printHeadings(opt *outputOptions) {
 				fmt.Print("  ----")
 			}
 			for _, c := range opt.classColumn {
-				fmt.Printf("   %3s  ", bin.CList[c].Abbr)
+				fmt.Printf("   %3s  ", d2bin.CList[c].Abbr)
 			}
 			if opt.classPossible {
 				fmt.Println(" ---------------")
@@ -523,7 +523,7 @@ func printHeadings(opt *outputOptions) {
 			if opt.raw && opt.noid {
 				fmt.Print(" Raw NID")
 			} else {
-				fmt.Printf(" %3s", bin.CList[c].Abbr)
+				fmt.Printf(" %3s", d2bin.CList[c].Abbr)
 			}
 		}
 		switch {
@@ -564,7 +564,7 @@ Config file keywords:
    obserr
 
 Orbit classes:`)
-	for _, c := range bin.CList {
+	for _, c := range d2bin.CList {
 		fmt.Printf("   %3s   %s\n", c.Abbr, c.Heading)
 	}
 	fmt.Println(`
@@ -573,22 +573,22 @@ For full documentation:
 }
 
 //  reads population model (created by muk)
-func readModel(cl *commandLine) (all, unk bin.Model) {
-	f, err := os.Open(cl.fixupCP(cl.dm, bin.Mfn))
+func readModel(cl *commandLine) (all, unk d2bin.Model) {
+	f, err := os.Open(cl.fixupCP(cl.dm, d2bin.Mfn))
 	if err != nil {
 		log.Println(err)
 		exit(`Use command "muk" to generate this file.`)
 	}
 	defer f.Close()
 	dec := gob.NewDecoder(f)
-	if err = dec.Decode(&bin.QPart); err != nil {
+	if err = dec.Decode(&d2bin.QPart); err != nil {
 		exit(err)
 	}
-	dec.Decode(&bin.EPart)
-	dec.Decode(&bin.IPart)
-	dec.Decode(&bin.HPart)
-	dec.Decode(&bin.MSize)
-	dec.Decode(&bin.LastH)
+	dec.Decode(&d2bin.EPart)
+	dec.Decode(&d2bin.IPart)
+	dec.Decode(&d2bin.HPart)
+	dec.Decode(&d2bin.MSize)
+	dec.Decode(&d2bin.LastH)
 	dec.Decode(&all)
 	if err = dec.Decode(&unk); err != nil {
 		exit(err)
