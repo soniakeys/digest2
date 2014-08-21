@@ -1,23 +1,6 @@
 /*
 Command muk prepares a data file for digest2.
 
-Installation
-
-If you followed the standard instructions for installing digest2 from
-the internet, muk should already be installed.
-
-The program is included in the digest2 source repository, so even if
-you installed only the digest2 command,
-
-    go install code.google.com/p/digest2/go/muk
-
-should compile and install muk now.
-
-go get should work as well:
-
-    go get code.google.com/p/digest2/go/muk
-
-
 Usage
 
 Command line options:
