@@ -18,10 +18,10 @@ import (
 	"strings"
 	"time"
 
-	"d2bin"
-	"d2solver"
-	"mpcformat"
-	"observation"
+	"digest2/d2solver"
+	"golib/d2bin"
+	"golib/mpcformat"
+	"golib/observation"
 )
 
 const parentImport = "digest2"
