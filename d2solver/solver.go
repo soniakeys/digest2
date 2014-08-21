@@ -4,9 +4,9 @@ package d2solver
 import (
 	"math"
 
+	"digest2/d2bin"
 	"golib/astro"
 	"golib/coord"
-	"golib/d2bin"
 	"golib/observation"
 )
 

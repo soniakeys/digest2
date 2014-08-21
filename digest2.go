@@ -18,8 +18,8 @@ import (
 	"strings"
 	"time"
 
+	"digest2/d2bin"
 	"digest2/d2solver"
-	"golib/d2bin"
 	"golib/mpcformat"
 	"golib/observation"
 )
