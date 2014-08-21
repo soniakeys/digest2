@@ -24,9 +24,9 @@ for an environment variable, S3M, which is set to a directory containing the
 unzipped s3m files.  If the environment variable is not set, it looks for
 a directory "s3m" in the current directory.
 
-The output file, s3m.dat, by default is generated in the package path
-"code.google.com/p/digest2/go/muk."  Alternatively the output path or
-file name can be specified as a command line argument.
+The output file, s3m.dat, by default is generated in the path "../muk" relative
+to the s3mbin source directory.  Alternatively the output path or file name
+can be specified as a command line argument.
 */
 package main
 
