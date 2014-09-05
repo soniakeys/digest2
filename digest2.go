@@ -336,17 +336,17 @@ Default:
 
 func readOcd(cl *commandLine) observation.ParallaxMap {
 	ocdFile := cl.fixupCP(cl.do, "digest2.obscodes")
-	ocdMap, readErr := mpcformat.ReadObscodeDat(ocdFile)
+	ocdMap, readErr := mpcformat.ReadObscodeDatFile(ocdFile)
 	if readErr == nil {
 		return ocdMap
 	}
 	// that didn't work.  try getting a fresh copy.
-	if err := mpcformat.FetchOcd(ocdFile); err != nil {
+	if err := mpcformat.FetchObscodeDat(ocdFile); err != nil {
 		log.Println(readErr) // show error from read attempt,
 		exit(err)            // and error from download attempt
 	}
 	// retry with downloaded file.  see if this copy works better
-	if ocdMap, readErr = mpcformat.ReadObscodeDat(ocdFile); readErr != nil {
+	if ocdMap, readErr = mpcformat.ReadObscodeDatFile(ocdFile); readErr != nil {
 		exit(readErr)
 	}
 	return ocdMap
