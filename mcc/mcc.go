@@ -1,3 +1,5 @@
+// Public domain 2014, Smithsonian Astrophysical Observatory.
+
 package main
 
 import (
@@ -12,7 +14,7 @@ import (
 )
 
 const versionString = "mcc version 0.1"
-const copyrightString = "Public domain, Smithsonian Astrophysical Observatory."
+const copyrightString = "Public domain 2014, Smithsonian Astrophysical Observatory."
 
 var col int
 var ignored int

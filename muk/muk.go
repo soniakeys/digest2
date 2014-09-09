@@ -1,3 +1,5 @@
+// Public domain 2014, Smithsonian Astrophysical Observatory.
+
 package main
 
 import (

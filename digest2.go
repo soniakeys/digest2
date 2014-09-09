@@ -1,3 +1,5 @@
+// Public domain 2014, Smithsonian Astrophysical Observatory.
+
 package main
 
 import (
@@ -26,7 +28,7 @@ import (
 
 const parentImport = "digest2"
 const versionString = "digest2 version 0.16 Go source."
-const copyrightString = "Public domain, Smithsonian Astrophysical Observatory."
+const copyrightString = "Public domain 2014, Smithsonian Astrophysical Observatory."
 
 type fatal struct {
 	err interface{}

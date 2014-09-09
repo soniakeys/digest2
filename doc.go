@@ -331,5 +331,8 @@ object identification, the selected known population is that which is readily
 identifiable.  The current criteria used is sky uncertainty < 1' arc.
 The uncertainty parameter selected for this comparison is field 24 of
 astorb.dat, which is a peak ephemeris uncertainty over a 10 year period.
+
+-------------
+Public domain 2014, Smithsonian Astrophysical Observatory.
 */
 package main

@@ -1,3 +1,5 @@
+// Public domain 2014, Smithsonian Astrophysical Observatory.
+
 // Package d2solver implements the digest2 algorithm.
 package d2solver
 

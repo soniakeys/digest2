@@ -1,3 +1,5 @@
+// Public domain 2014, Smithsonian Astrophysical Observatory.
+
 // Package d2bin defines the bin model used by digest2 and two utility programs
 // muk and s3mbin.
 package d2bin

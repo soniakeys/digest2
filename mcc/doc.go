@@ -70,5 +70,8 @@ mcc allows scores containing a decimal point but it otherwise ignores lines
 where it does not find a numeric score in the specified column.  This should
 allow it to accept not only output from the current version of digest2, but
 also output of other versions or even other programs.
+
+-------------
+Public domain 2014, Smithsonian Astrophysical Observatory.
 */
 package main

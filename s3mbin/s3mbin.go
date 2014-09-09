@@ -27,6 +27,9 @@ a directory "s3m" in the current directory.
 The output file, s3m.dat, by default is generated in the path "../muk" relative
 to the s3mbin source directory.  Alternatively the output path or file name
 can be specified as a command line argument.
+
+-------------
+Public domain 2014, Smithsonian Astrophysical Observatory.
 */
 package main
 
