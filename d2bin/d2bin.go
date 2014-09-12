@@ -4,7 +4,11 @@
 // muk and s3mbin.
 package d2bin
 
-import "math"
+import (
+	"encoding/gob"
+	"math"
+	"os"
+)
 
 // Sfn, the binned model
 const Sfn = "s3m.dat"
@@ -29,6 +33,33 @@ func New() *Model {
 		m.Class[c] = make([]float64, MSize)
 	}
 	return &m
+}
+
+// ReadFile reads a population model.
+//
+// Argument fn is the filename of the model file created by muk.
+//
+// The model is returned in all and unk, also package variables QPart, EPart,
+// IPart, HPart, MSize, and LastH are set.
+func ReadFile(fn string) (all, unk Model, err error) {
+	var f *os.File
+	f, err = os.Open(fn)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	dec := gob.NewDecoder(f)
+	if err = dec.Decode(&QPart); err != nil {
+		return
+	}
+	dec.Decode(&EPart)
+	dec.Decode(&IPart)
+	dec.Decode(&HPart)
+	dec.Decode(&MSize)
+	dec.Decode(&LastH)
+	dec.Decode(&all)
+	err = dec.Decode(&unk)
+	return
 }
 
 // Package variables that define the shape and size of the model.  They are

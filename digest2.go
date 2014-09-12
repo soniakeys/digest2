@@ -4,7 +4,6 @@ package main
 
 import (
 	"bufio"
-	"encoding/gob"
 	"flag"
 	"fmt"
 	"go/build"
@@ -576,24 +575,11 @@ For full documentation:
 
 //  reads population model (created by muk)
 func readModel(cl *commandLine) (all, unk d2bin.Model) {
-	f, err := os.Open(cl.fixupCP(cl.dm, d2bin.Mfn))
+	var err error
+	all, unk, err = d2bin.ReadFile(cl.fixupCP(cl.dm, d2bin.Mfn))
 	if err != nil {
 		log.Println(err)
-		exit(`Use command "muk" to generate this file.`)
-	}
-	defer f.Close()
-	dec := gob.NewDecoder(f)
-	if err = dec.Decode(&d2bin.QPart); err != nil {
-		exit(err)
-	}
-	dec.Decode(&d2bin.EPart)
-	dec.Decode(&d2bin.IPart)
-	dec.Decode(&d2bin.HPart)
-	dec.Decode(&d2bin.MSize)
-	dec.Decode(&d2bin.LastH)
-	dec.Decode(&all)
-	if err = dec.Decode(&unk); err != nil {
-		exit(err)
+		exit(`Use command "muk" to regenerate the model file.`)
 	}
 	return
 }
