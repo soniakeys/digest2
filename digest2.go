@@ -21,6 +21,7 @@ import (
 
 	"digest2/d2bin"
 	"digest2/d2solver"
+	"golib/lcg"
 	"golib/mpcformat"
 	"golib/observation"
 )
@@ -156,24 +157,6 @@ type tkSeq struct {
 	rch chan string
 }
 
-type lcgRand uint64
-
-var lcga, lcgm lcgRand
-var invLcgm float64
-
-func init() {
-	lcga = lcgRand(math.Pow(13, 13))
-	lcgm = 1
-	lcgm <<= 59
-	invLcgm = 1 / float64(lcgm)
-	lcgm--
-}
-
-func (r *lcgRand) Float64() float64 {
-	*r = *r * lcga & lcgm
-	return float64(*r) * invLcgm
-}
-
 // worker process, solves tracklets.
 // the first tracklet to solve will be waiting in tkCh.
 // additional tracklets are requested by sending tkCh back over avCh.
@@ -184,14 +167,14 @@ func solve(solver *d2solver.D2Solver,
 	opt *outputOptions) {
 	var rnd d2solver.Rand
 	if repeatable {
-		rnd = new(lcgRand)
+		rnd = lcg.New()
 	} else {
 		rnd = rand.New(rand.NewSource(time.Now().UnixNano()))
 	}
 	// this is an infinite loop.  it just runs until the program shuts down.
 	for ; ; tk = <-tkCh {
 		if repeatable {
-			*rnd.(*lcgRand) = 3
+			rnd.Seed(3)
 		}
 
 		// average whatever magnitudes are there.  default to V=21 if none.

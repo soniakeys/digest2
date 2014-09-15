@@ -134,6 +134,7 @@ type classStats struct {
 // digest2 produce the same answers.
 type Rand interface {
 	Float64() float64
+	Seed(int64)
 }
 
 // some parameters for the algorithm
