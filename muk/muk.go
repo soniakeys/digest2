@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"digest2/d2bin"
 )
@@ -255,14 +256,18 @@ This process is often time consuming.
 		exit(err)
 	}
 	defer forb.Close()
+	var aoDate time.Time
+	if fi, err := forb.Stat(); err == nil {
+		aoDate = fi.ModTime()
+	}
 	bfile := bufio.NewReaderSize(forb, 1<<10)
 	line, err := bfile.ReadString('\n')
 	if err != nil {
 		exit(err)
 	}
-	var decpeuy_fails, decpeu_rejects, parsefails, outofmodel, lines, good int
+	var decpeuy_fails, decpeu_rejects, parsefails, outofmodel, aoLines, good int
 	for ; err == nil; line, err = bfile.ReadString('\n') {
-		lines += 1
+		aoLines++
 		decpeuy, err := strconv.Atoi(line[242:246])
 		if err != nil || decpeuy < 2000 {
 			decpeuy_fails++
@@ -315,7 +320,7 @@ This process is often time consuming.
 		}
 	}
 
-	fmt.Println(lines, "lines in", aoFile)
+	fmt.Println(aoLines, "lines in", aoFile)
 	if parsefails > 0 {
 		fmt.Println(parsefails, "lines failed to parse")
 	}
@@ -392,6 +397,8 @@ This process is often time consuming.
 			exit(err)
 		}
 	}
+	mustEncode(&aoDate)
+	mustEncode(aoLines)
 	mustEncode(d2bin.QPart)
 	mustEncode(d2bin.EPart)
 	mustEncode(d2bin.IPart)

@@ -8,6 +8,7 @@ import (
 	"encoding/gob"
 	"math"
 	"os"
+	"time"
 )
 
 // Sfn, the binned model
@@ -41,7 +42,7 @@ func New() *Model {
 //
 // The model is returned in all and unk, also package variables QPart, EPart,
 // IPart, HPart, MSize, and LastH are set.
-func ReadFile(fn string) (all, unk Model, err error) {
+func ReadFile(fn string) (all, unk Model, aoDate time.Time, aoLines int, err error) {
 	var f *os.File
 	f, err = os.Open(fn)
 	if err != nil {
@@ -49,6 +50,12 @@ func ReadFile(fn string) (all, unk Model, err error) {
 	}
 	defer f.Close()
 	dec := gob.NewDecoder(f)
+	if err = dec.Decode(&aoDate); err != nil {
+		return
+	}
+	if err = dec.Decode(&aoLines); err != nil {
+		return
+	}
 	if err = dec.Decode(&QPart); err != nil {
 		return
 	}

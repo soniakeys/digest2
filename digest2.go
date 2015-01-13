@@ -53,8 +53,13 @@ func main() {
 
 	// these functions all set up package vars and terminate on error
 	cl := parseCommandLine()
+	all, unk, aoDate, aoLines := readModel(cl)
+	if cl.v {
+		fmt.Printf("Astorb.dat %s, %d lines.\n",
+			aoDate.Format("2 Jan 2006"), aoLines)
+		os.Exit(0)
+	}
 	ocdMap := readOcd(cl)
-	all, unk := readModel(cl)
 	classCompute, repeatable, obsErrMap, obsErrDefault, opt :=
 		readConfig(cl, ocdMap)
 
@@ -265,6 +270,7 @@ type commandLine struct {
 	do    string // obscode file
 	dp    string // default path
 	fnObs string // observations
+	v     bool   // -v option
 }
 
 func parseCommandLine() *commandLine {
@@ -309,7 +315,7 @@ Default:
 	case *dv:
 		fmt.Println(versionString)
 		fmt.Println(copyrightString)
-		os.Exit(0)
+		cl.v = true
 	case flag.NArg() != 1:
 		flag.Usage()
 		os.Exit(1)
@@ -557,9 +563,10 @@ For full documentation:
 }
 
 //  reads population model (created by muk)
-func readModel(cl *commandLine) (all, unk d2bin.Model) {
+func readModel(cl *commandLine) (all, unk d2bin.Model, aoDate time.Time, aoLines int) {
 	var err error
-	all, unk, err = d2bin.ReadFile(cl.fixupCP(cl.dm, d2bin.Mfn))
+	all, unk, aoDate, aoLines, err =
+		d2bin.ReadFile(cl.fixupCP(cl.dm, d2bin.Mfn))
 	if err != nil {
 		log.Println(err)
 		exit(`Use command "muk" to regenerate the model file.`)
