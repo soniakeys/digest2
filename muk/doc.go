@@ -36,6 +36,6 @@ in a format readily useful to digest2.  This format is the Go "gob" format, a
 binary format that is not human readable.
 
 -------------
-Public domain 2014, Smithsonian Astrophysical Observatory.
+Public domain.
 */
 package main

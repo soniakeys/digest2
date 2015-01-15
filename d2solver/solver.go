@@ -1,4 +1,4 @@
-// Public domain 2014, Smithsonian Astrophysical Observatory.
+// Public domain.
 
 // Package d2solver implements the digest2 algorithm.
 package d2solver
@@ -6,10 +6,10 @@ package d2solver
 import (
 	"math"
 
-	"digest2/d2bin"
-	"golib/astro"
-	"golib/coord"
-	"golib/observation"
+	"github.com/soniakeys/digest2/d2bin"
+	"github.com/soniakeys/astro"
+	"github.com/soniakeys/coord"
+	"github.com/soniakeys/observation"
 )
 
 // D2Solver contains data and parameters needed for the digest2 algorithm.

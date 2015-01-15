@@ -1,4 +1,4 @@
-// Public domain 2014, Smithsonian Astrophysical Observatory.
+// Public domain.
 
 package main
 
@@ -24,7 +24,7 @@ import (
 
 const parentImport = "digest2"
 const versionString = "muk version 0.1 Go source."
-const copyrightString = "Public domain, Smithsonian Astrophysical Observatory."
+const copyrightString = "Public domain."
 const aofn = "astorb.dat"
 
 type fatal struct {

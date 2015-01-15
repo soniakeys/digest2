@@ -1,4 +1,4 @@
-// Public domain 2014, Smithsonian Astrophysical Observatory.
+// Public domain.
 
 package main
 
@@ -19,16 +19,16 @@ import (
 	"strings"
 	"time"
 
-	"digest2/d2bin"
-	"digest2/d2solver"
-	"golib/lcg"
-	"golib/mpcformat"
-	"golib/observation"
+	"github.com/soniakeys/digest2/d2bin"
+	"github.com/soniakeys/digest2/d2solver"
+	"github.com/soniakeys/lcg"
+	"github.com/soniakeys/mpcformat"
+	"github.com/soniakeys/observation"
 )
 
 const parentImport = "digest2"
 const versionString = "digest2 version 0.16 Go source."
-const copyrightString = "Public domain 2014, Smithsonian Astrophysical Observatory."
+const copyrightString = "Public domain."
 
 type fatal struct {
 	err interface{}

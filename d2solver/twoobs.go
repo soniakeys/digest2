@@ -1,13 +1,13 @@
-// Public domain 2014, Smithsonian Astrophysical Observatory.
+// Public domain.
 
 package d2solver
 
 import (
 	"math"
 
-	"golib/coord"
-	"golib/lmfit"
-	"golib/observation"
+	"github.com/soniakeys/coord"
+	"github.com/soniakeys/lmfit"
+	"github.com/soniakeys/observation"
 )
 
 // twoObs computes two observations suitable for computing motion vector.

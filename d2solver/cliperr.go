@@ -1,4 +1,4 @@
-// Public domain 2014, Smithsonian Astrophysical Observatory.
+// Public domain.
 
 package d2solver
 

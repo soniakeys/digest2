@@ -1,3 +1,5 @@
+// Public domain.
+
 package d2bin_test
 
 import (
@@ -15,7 +17,7 @@ func ExampleNew() {
 }
 
 func TestModel(t *testing.T) {
-	all, unk, err := d2bin.ReadFile("../digest2.gmodel")
+	all, unk, _, _, err := d2bin.ReadFile("../digest2.gmodel")
 	if err != nil {
 		t.Skip(err)
 	}

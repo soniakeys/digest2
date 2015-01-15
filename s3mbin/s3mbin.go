@@ -29,7 +29,7 @@ to the s3mbin source directory.  Alternatively the output path or file name
 can be specified as a command line argument.
 
 -------------
-Public domain 2014, Smithsonian Astrophysical Observatory.
+Public domain.
 */
 package main
 
@@ -47,12 +47,12 @@ import (
 	"strings"
 
 	"digest2/d2bin"
-	"golib/exit"
+	"github.com/soniakeys/exit"
 )
 
 const parentImport = "digest2"
-const versionString = "s3mbin version 0.1 Go source."
-const copyrightString = "Public domain, Smithsonian Astrophysical Observatory."
+const versionString = "s3mbin version 0.2"
+const copyrightString = "Public domain."
 
 // Orbits are binned in four dimensions of q, e, i, and H.
 // The partitions in each dimension vary in size.
@@ -179,7 +179,7 @@ var s3mFiles = []string{
 }
 
 func main() {
-	defer exit.Exit()
+	defer exit.Handler()
 	// parent dir of s3mbin, muk, etc.
 	parentDir := ""
 	if pkg, err := build.Import(parentImport, "", build.FindOnly); err == nil {
