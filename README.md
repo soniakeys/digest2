@@ -1,4 +1,4 @@
-# digest2 &mdash; unoffical
+# digest2 &mdash; unofficial
 
 The digest2 currently used by the Minor Planet Center is at https://code.google.com/p/digest2/.
 Please look there for production code.
