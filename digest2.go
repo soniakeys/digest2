@@ -19,8 +19,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/soniakeys/digest2/d2bin"
-	"github.com/soniakeys/digest2/d2solver"
+	"github.com/soniakeys/digest2/internal/d2bin"
+	"github.com/soniakeys/digest2/internal/d2solver"
 	"github.com/soniakeys/lcg"
 	"github.com/soniakeys/mpcformat"
 	"github.com/soniakeys/observation"

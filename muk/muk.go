@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/soniakeys/digest2/d2bin"
+	"github.com/soniakeys/digest2/internal/d2bin"
 )
 
 const parentImport = "digest2"

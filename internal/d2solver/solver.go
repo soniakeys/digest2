@@ -6,9 +6,9 @@ package d2solver
 import (
 	"math"
 
-	"github.com/soniakeys/digest2/d2bin"
 	"github.com/soniakeys/astro"
 	"github.com/soniakeys/coord"
+	"github.com/soniakeys/digest2/internal/d2bin"
 	"github.com/soniakeys/observation"
 )
 

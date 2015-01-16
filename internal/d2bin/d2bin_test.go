@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"digest2/d2bin"
+	"github.com/soniakeys/digest2/internal/d2bin"
 )
 
 func ExampleNew() {
