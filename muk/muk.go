@@ -19,11 +19,11 @@ import (
 	"strings"
 	"time"
 
-	"digest2/d2bin"
+	"github.com/soniakeys/digest2/d2bin"
 )
 
 const parentImport = "digest2"
-const versionString = "muk version 0.1 Go source."
+const versionString = "muk version 0.2 Go source."
 const copyrightString = "Public domain."
 const aofn = "astorb.dat"
 
