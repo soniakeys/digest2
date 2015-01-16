@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/soniakeys/digest2/internal/d2bin"
+	"github.com/soniakeys/exit"
 )
 
 const parentImport = "digest2"
@@ -27,25 +28,8 @@ const versionString = "muk version 0.2 Go source."
 const copyrightString = "Public domain."
 const aofn = "astorb.dat"
 
-type fatal struct {
-	err error
-}
-
-func exit(err error) {
-	panic(fatal{err})
-}
-
-func handleFatal() {
-	if err := recover(); err != nil {
-		if f, ok := err.(fatal); ok {
-			log.Fatal(f.err)
-		}
-		panic(err)
-	}
-}
-
 func main() {
-	defer handleFatal()
+	defer exit.Handler()
 
 	// muk package dir.  required location of s3m.dat, default location
 	// of astorb.dat
@@ -100,7 +84,7 @@ For full documentation:
 		}
 		fi, statErr := os.Stat(*clPath)
 		if statErr != nil {
-			exit(statErr)
+			exit.Log(statErr)
 		}
 		if fi.IsDir() {
 			// add default file name
@@ -126,22 +110,22 @@ This process is often time consuming.
 		c.Stderr = os.Stderr
 		wOut, err := c.StdoutPipe()
 		if err != nil {
-			exit(err)
+			exit.Log(err)
 		}
 		if err = c.Start(); err != nil {
-			exit(err)
+			exit.Log(err)
 		}
 		// gunzip.  This we can handle.
 		uOut, err := gzip.NewReader(wOut)
 		if err != nil {
-			exit(err)
+			exit.Log(err)
 		}
 		f, err := os.Create(defPath)
 		if err != nil {
-			exit(err)
+			exit.Log(err)
 		}
 		if _, err = io.Copy(f, uOut); err != nil {
-			exit(err)
+			exit.Log(err)
 		}
 		f.Close()
 	}
@@ -159,7 +143,7 @@ This process is often time consuming.
 
 	f, err := os.Open(sPath)
 	if err != nil {
-		exit(err)
+		exit.Log(err)
 	}
 	bf := bufio.NewReader(f)
 	var ln int
@@ -169,7 +153,7 @@ This process is often time consuming.
 			log.Println(i)
 		}
 		f.Close()
-		exit(fmt.Errorf("%s corrupt. line %d", d2bin.Sfn, ln))
+		exit.Log(fmt.Errorf("%s corrupt. line %d", d2bin.Sfn, ln))
 	}
 	mustRead := func() string {
 		ln++
@@ -253,7 +237,7 @@ This process is often time consuming.
 	// Note also that astorb.data is ASCII encoded.
 	forb, err := os.Open(astorbPath)
 	if err != nil {
-		exit(err)
+		exit.Log(err)
 	}
 	defer forb.Close()
 	var aoDate time.Time
@@ -263,7 +247,7 @@ This process is often time consuming.
 	bfile := bufio.NewReaderSize(forb, 1<<10)
 	line, err := bfile.ReadString('\n')
 	if err != nil {
-		exit(err)
+		exit.Log(err)
 	}
 	var decpeuy_fails, decpeu_rejects, parsefails, outofmodel, aoLines, good int
 	for ; err == nil; line, err = bfile.ReadString('\n') {
@@ -383,7 +367,7 @@ This process is often time consuming.
 	mPath := filepath.Join(parentDir, d2bin.Mfn)
 	fbin, err := os.Create(mPath)
 	if err != nil {
-		exit(err)
+		exit.Log(err)
 	}
 	if astorbPath == defPath {
 		fmt.Println("Writing", d2bin.Mfn)
@@ -394,7 +378,7 @@ This process is often time consuming.
 	enc := gob.NewEncoder(fbin)
 	mustEncode := func(i interface{}) {
 		if err := enc.Encode(i); err != nil {
-			exit(err)
+			exit.Log(err)
 		}
 	}
 	mustEncode(&aoDate)
