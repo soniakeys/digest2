@@ -21,6 +21,7 @@ import (
 
 	"github.com/soniakeys/digest2/internal/d2bin"
 	"github.com/soniakeys/digest2/internal/d2solver"
+	"github.com/soniakeys/exit"
 	"github.com/soniakeys/lcg"
 	"github.com/soniakeys/mpcformat"
 	"github.com/soniakeys/observation"
@@ -30,26 +31,8 @@ const parentImport = "digest2"
 const versionString = "digest2 version 0.16 Go source."
 const copyrightString = "Public domain."
 
-type fatal struct {
-	err interface{}
-}
-
-// exit ultimately calls log.Fatal but first allows
-// defered functions to be called.
-func exit(err interface{}) {
-	panic(fatal{err})
-}
-
 func main() {
-	// fatal error handler
-	defer func() {
-		if err := recover(); err != nil {
-			if f, ok := err.(fatal); ok {
-				log.Fatal(f.err)
-			}
-			panic(err)
-		}
-	}()
+	defer exit.Handler()
 
 	// these functions all set up package vars and terminate on error
 	cl := parseCommandLine()
@@ -75,7 +58,7 @@ func main() {
 		var err error
 		f, err = os.Open(cl.fnObs)
 		if err != nil {
-			exit(err)
+			exit.Log(err)
 		}
 		defer f.Close()
 	}
@@ -141,7 +124,7 @@ func main() {
 	for {
 		select {
 		case err := <-errCh:
-			exit(err)
+			exit.Log(err)
 		// wait here for next result channel in processing order
 		case rch, ok := <-prCh:
 			if !ok {
@@ -149,7 +132,7 @@ func main() {
 			}
 			select {
 			case err := <-errCh:
-				exit(err)
+				exit.Log(err)
 			case r := <-rch:
 				fmt.Println(r) // wait here for processing result
 			}
@@ -333,11 +316,11 @@ func readOcd(cl *commandLine) observation.ParallaxMap {
 	// that didn't work.  try getting a fresh copy.
 	if err := mpcformat.FetchObscodeDat(ocdFile); err != nil {
 		log.Println(readErr) // show error from read attempt,
-		exit(err)            // and error from download attempt
+		exit.Log(err)        // and error from download attempt
 	}
 	// retry with downloaded file.  see if this copy works better
 	if ocdMap, readErr = mpcformat.ReadObscodeDatFile(ocdFile); readErr != nil {
-		exit(readErr)
+		exit.Log(readErr)
 	}
 	return ocdMap
 }
@@ -369,7 +352,7 @@ func readConfig(cl *commandLine, ocdMap observation.ParallaxMap) (classCompute [
 		if cl.dc == "" {
 			return
 		}
-		exit(err)
+		exit.Log(err)
 	}
 	defer f.Close()
 
@@ -412,9 +395,9 @@ read:
 			}
 			return
 		case err != nil:
-			exit(err)
+			exit.Log(err)
 		case isPre:
-			exit("Unexpected long line in config file.")
+			exit.Log("Unexpected long line in config file.")
 		case len(l) == 0:
 			continue
 		case l[0] == '#':
@@ -465,7 +448,7 @@ read:
 		if strings.HasPrefix(ls, "obserr") {
 			errStr := parseObsErr(ls[6:])
 			if errStr > "" {
-				exit(fmt.Sprintf("%s\nConfig file line: %s", errStr, ls))
+				exit.Log(fmt.Sprintf("%s\nConfig file line: %s", errStr, ls))
 			}
 			continue
 		}
@@ -481,7 +464,7 @@ read:
 				continue read
 			}
 		}
-		exit("Unrecognized line in config file: " + ls)
+		exit.Log("Unrecognized line in config file: " + ls)
 	}
 	return
 }
@@ -569,7 +552,7 @@ func readModel(cl *commandLine) (all, unk d2bin.Model, aoDate time.Time, aoLines
 		d2bin.ReadFile(cl.fixupCP(cl.dm, d2bin.Mfn))
 	if err != nil {
 		log.Println(err)
-		exit(`Use command "muk" to regenerate the model file.`)
+		exit.Log(`Use command "muk" to regenerate the model file.`)
 	}
 	return
 }
