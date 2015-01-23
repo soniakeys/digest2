@@ -160,7 +160,7 @@ func (tk *tracklet) score() {
 	tk.lastObsErr = solver.clipErr(lastRms, m2.Qual)
 
 	// dt derived factors handy in computations
-	tk.dt = m2.Mjd - m1.Mjd
+	tk.dt = m2.MJD - m1.MJD
 	tk.invdt = 1 / tk.dt
 	tk.invdtsq = tk.invdt * tk.invdt
 
@@ -204,7 +204,7 @@ func (tk *tracklet) score() {
 // struct.  also sets soe, coe.
 func (tk *tracklet) sov(o observation.VObs) (sunObserver coord.Cart) {
 	var sunEarth, earthSite coord.Cart
-	sunEarth, tk.soe, tk.coe = astro.Se2000(o.Meas().Mjd)
+	sunEarth, tk.soe, tk.coe = astro.Se2000(o.Meas().MJD)
 	earthSite = o.EarthObserverVect()
 	sunObserver.Sub(&earthSite, &sunEarth)
 	sunObserver.RotateX(&sunObserver, tk.soe, tk.coe)
@@ -278,7 +278,7 @@ func (tk *tracklet) oouv(
 	rx, dx float64,
 ) (observerObjectUnit coord.Cart) {
 	sdec, cdec := math.Sincos(sky.Dec + dx*obsErr*.5)
-	sra, cra := math.Sincos(sky.Sphr.Ra + rx*obsErr*.5*cdec)
+	sra, cra := math.Sincos(sky.Sphr.RA + rx*obsErr*.5*cdec)
 	observerObjectUnit = coord.Cart{
 		X: cra * cdec,
 		Y: sra * cdec,

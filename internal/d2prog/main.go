@@ -174,8 +174,8 @@ func solve(solver *d2solver.D2Solver,
 		var vmag, mSum, mCount float64
 		for _, obs := range tk.tk.Obs {
 			m := obs.Meas()
-			if m.Vmag > 0 {
-				mSum += m.Vmag
+			if m.VMag > 0 {
+				mSum += m.VMag
 				mCount++
 			}
 		}

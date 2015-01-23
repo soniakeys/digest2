@@ -31,7 +31,7 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 	s := make(coord.SphrS, len(arc))
 	for i, o := range arc {
 		m := o.Meas()
-		t[i] = m.Mjd
+		t[i] = m.MJD
 		s[i] = m.Sphr
 	}
 	lmf := lmfit.New(t, s)
@@ -79,21 +79,21 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 
 	// compute times t17 and t83 at these points of interest.
 	// the times will be used in a few different ways.
-	t17 := arc[is].Meas().Mjd
-	t17 += (arc[is+1].Meas().Mjd - t17) * fs
+	t17 := arc[is].Meas().MJD
+	t17 += (arc[is+1].Meas().MJD - t17) * fs
 	is = len(arc) - 1 - is
-	t83 := arc[is].Meas().Mjd
-	t83 -= (t83 - arc[is-1].Meas().Mjd) * fs
+	t83 := arc[is].Meas().MJD
+	t83 -= (t83 - arc[is-1].Meas().MJD) * fs
 
 	// next case still fairly simple:  single site, arc < 3 hrs.
 	//    => use gc fit of whole arc and synthesize obs at the 17th
 	//    and 83rd percentile times.  first, last rms same as tracklet.
-	if allSameSite && siteLast.Mjd-site0.Mjd < .125 {
+	if allSameSite && siteLast.MJD-site0.MJD < .125 {
 		so := &observation.SiteObs{
 			VMeas: site0.VMeas,
 			Par:   par0,
 		}
-		so.VMeas.Mjd = t17
+		so.VMeas.MJD = t17
 		so.VMeas.Sphr = *lmf.Pos(t17)
 		tk.first = so
 
@@ -101,7 +101,7 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 			VMeas: siteLast.VMeas,
 			Par:   par0,
 		}
-		so.VMeas.Mjd = t83
+		so.VMeas.MJD = t83
 		so.VMeas.Sphr = *lmf.Pos(t83)
 		tk.last = so
 
@@ -122,11 +122,11 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 	site2 := siteLast
 	par1 := par0
 	par2 := site2.Par
-	t1 := site1.Mjd
-	t2 := site2.Mjd
+	t1 := site1.MJD
+	t2 := site2.MJD
 	for {
 		s1next := arc[o1+1].(*observation.SiteObs)
-		dt1 := s1next.Mjd - t1
+		dt1 := s1next.MJD - t1
 		if s1next.Par != par1 || dt1 > .125 {
 			// initial arc is done, just try to extend final arc
 			for {
@@ -135,7 +135,7 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 					break
 				}
 				s2prev := arc[o].(*observation.SiteObs)
-				if s2prev.Par != par2 || t2-s2prev.Mjd > .125 {
+				if s2prev.Par != par2 || t2-s2prev.MJD > .125 {
 					break
 				}
 				o2 = o
@@ -143,7 +143,7 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 			break
 		}
 		s2prev := arc[o2-1].(*observation.SiteObs)
-		dt2 := t2 - s2prev.Mjd
+		dt2 := t2 - s2prev.MJD
 		if s2prev.Par != par2 || dt2 > .125 {
 			// final arc is done, just try to extend initial arc
 			for {
@@ -152,7 +152,7 @@ func (tk *tracklet) twoObs() (firstRms, lastRms float64) {
 					break
 				}
 				s1next := arc[o].(*observation.SiteObs)
-				if s1next.Par != par1 || s1next.Mjd-t1 > .125 {
+				if s1next.Par != par1 || s1next.MJD-t1 > .125 {
 					break
 				}
 				o1 = o
@@ -200,9 +200,9 @@ func oneObs(
 			end := result
 			if o1 == 0 {
 				end = arc[1].(*observation.SiteObs)
-				dt = end.Mjd - pt
+				dt = end.MJD - pt
 			} else {
-				dt = pt - end.Mjd
+				dt = pt - end.MJD
 			}
 			if dt < 0 {
 				return end, 0
@@ -214,19 +214,19 @@ func oneObs(
 		r2 := *(arc[o2].(*observation.SiteObs))
 		t := make([]float64, 2)
 		s := make(coord.SphrS, 2)
-		t[0] = result.Mjd
+		t[0] = result.MJD
 		s[0] = result.Sphr
-		t[1] = r2.Mjd
+		t[1] = r2.MJD
 		s[1] = r2.Sphr
 		lmf := lmfit.New(t, s)
 		if arcsUseAllObs {
 			// gc midpoint
-			r2.Mjd = (result.Mjd + r2.Mjd) * .5
+			r2.MJD = (result.MJD + r2.MJD) * .5
 		} else {
 			// gc at pt
-			r2.Mjd = pt
+			r2.MJD = pt
 		}
-		r2.Sphr = *lmf.Pos(r2.Mjd)
+		r2.Sphr = *lmf.Pos(r2.MJD)
 		return &r2, 0
 	}
 
@@ -236,20 +236,20 @@ func oneObs(
 	if arcsUseAllObs {
 		// median time of arc
 		is := (o1 + o2) / 2
-		tr = arc[is].(*observation.SiteObs).Mjd
+		tr = arc[is].(*observation.SiteObs).MJD
 		if is+is < o1+o2 {
-			tr = (tr + arc[is+1].(*observation.SiteObs).Mjd) * .5
+			tr = (tr + arc[is+1].(*observation.SiteObs).MJD) * .5
 		}
 	} else {
 		var dt float64
 		if o1 == 0 {
 			result = arc[o2].(*observation.SiteObs)
-			dt = result.Mjd - pt
+			dt = result.MJD - pt
 		} else {
-			dt = pt - result.Mjd
+			dt = pt - result.MJD
 		}
 		if dt < 0 {
-			tr = result.Mjd
+			tr = result.MJD
 		} else {
 			tr = pt
 		}
@@ -261,12 +261,12 @@ func oneObs(
 	s := make(coord.SphrS, np)
 	for i, v := range arc[o1 : o2+1] {
 		m := v.(*observation.SiteObs)
-		t[i] = m.Mjd
+		t[i] = m.MJD
 		s[i] = m.Sphr
 	}
 	lmf := lmfit.New(t, s)
 	r2 := *result
-	r2.Mjd = tr
+	r2.MJD = tr
 	r2.Sphr = *lmf.Pos(tr)
 	return &r2, lmf.Rms() // return an rms for this arc
 }
