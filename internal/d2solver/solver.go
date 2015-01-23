@@ -29,17 +29,17 @@ func New(all, unk d2bin.Model, classCompute []int,
 	return &D2Solver{all, unk, classCompute, obsErrMap, obsErrDefault}
 }
 
-// Solve runs the digest2 algorithm on a single tracklet.
+// Solve runs the digest2 algorithm on a single observational arc.
 //
-// Rms returned is based on residuals of all observations in the tracklet
+// Rms returned is based on residuals of all observations in the arc
 // against fitted linear great circle motion.
 // Digest2 scores are returned in the slice classScores.
-func (s *D2Solver) Solve(otk *observation.Tracklet, vmag float64,
+func (s *D2Solver) Solve(obs *observation.Arc, vMag float64,
 	rnd Rand) (rms float64, classScores []Scores) {
 
-	tk := s.newTracklet(otk, vmag, rnd) // create workspace
-	tk.score()                          // run the algorithm
-	return tk.rms, tk.classScores
+	a := s.newArc(obs, vMag, rnd) // create workspace
+	a.score()                     // run the algorithm
+	return a.rms, a.classScores
 }
 
 // Scores is the return type from D2Solver.Solve
@@ -47,16 +47,18 @@ type Scores struct {
 	Raw, NoId float64
 }
 
-// big messy struct is the workspace for the digest2 algorithm.
-type tracklet struct {
-	// inputs.  tracket constructed with these
+// Big messy struct is the workspace for the digest2 algorithm.
+// The algorithm operates on a set of observations on a single object.
+// --typically a arc, but not required to be all from the same observer.
+type arc struct {
+	// inputs.  arc constructed with these
 	solver *D2Solver
-	otk    *observation.Tracklet
-	vmag   float64
+	obs    *observation.Arc
+	vMag   float64
 	rnd    Rand
 
 	// result values read by digest2.solve
-	rms         float64 // rms for tracklet as a whole
+	rms         float64 // rms for arc as a whole
 	classScores []Scores
 
 	cs []*classStats
@@ -67,7 +69,7 @@ type tracklet struct {
 	firstObsErr, lastObsErr float64
 	noObsErr                bool
 
-	// distance independent working variables.  computed once per tracklet.
+	// distance independent working variables.  computed once per arc.
 	dt, invdt, invdtsq  float64
 	soe, coe            float64
 	sunObserver0        coord.Cart // vector at time t0
@@ -97,29 +99,29 @@ type tracklet struct {
 	hv, v coord.Cart
 }
 
-func (s *D2Solver) newTracklet(otk *observation.Tracklet, vmag float64,
-	rnd Rand) *tracklet {
+func (s *D2Solver) newArc(obs *observation.Arc, vMag float64,
+	rnd Rand) *arc {
 
-	t := &tracklet{
+	a := &arc{
 		solver:      s,
-		otk:         otk,
-		vmag:        vmag,
+		obs:         obs,
+		vMag:        vMag,
 		rnd:         rnd,
 		dTag:        make(map[int]bool),
 		classScores: make([]Scores, len(s.classCompute)),
 		cs:          make([]*classStats, len(s.classCompute)),
 	}
-	for c, _ := range t.cs {
-		t.cs[c] = &classStats{
+	for c, _ := range a.cs {
+		a.cs[c] = &classStats{
 			dInClass:    make(map[int]bool),
 			dNonClass:   make(map[int]bool),
 			tagInClass:  make(map[int]bool),
 			tagNonClass: make(map[int]bool)}
 	}
-	return t
+	return a
 }
 
-// per-class workspace, allocated in newTracklet
+// per-class workspace, allocated in newArc
 type classStats struct {
 	tagInClass, tagNonClass       map[int]bool
 	sumAllInClass, sumAllNonClass float64
@@ -147,37 +149,37 @@ const (
 	ageLimit = 1
 )
 
-func (tk *tracklet) score() {
+func (a *arc) score() {
 	// synthesize or select two observations to determine motion vector
-	// this also sets rms values for the two obs and the tracklet as a whole
-	firstRms, lastRms := tk.twoObs()
-	m1 := tk.first.Meas()
-	m2 := tk.last.Meas()
+	// this also sets rms values for the two obs and the arc as a whole
+	firstRms, lastRms := a.twoObs()
+	m1 := a.first.Meas()
+	m2 := a.last.Meas()
 
 	// set observational errors to use
-	solver := tk.solver
-	tk.firstObsErr = solver.clipErr(firstRms, m1.Qual)
-	tk.lastObsErr = solver.clipErr(lastRms, m2.Qual)
+	solver := a.solver
+	a.firstObsErr = solver.clipErr(firstRms, m1.Qual)
+	a.lastObsErr = solver.clipErr(lastRms, m2.Qual)
 
 	// dt derived factors handy in computations
-	tk.dt = m2.MJD - m1.MJD
-	tk.invdt = 1 / tk.dt
-	tk.invdtsq = tk.invdt * tk.invdt
+	a.dt = m2.MJD - m1.MJD
+	a.invdt = 1 / a.dt
+	a.invdtsq = a.invdt * a.invdt
 
 	// solve sun-observer vectors in ecliptic coordinates at observation times
-	tk.sunObserver0 = tk.sov(tk.first)
-	tk.sunObserver1 = tk.sov(tk.last)
+	a.sunObserver0 = a.sov(a.first)
+	a.sunObserver1 = a.sov(a.last)
 
-	if tk.firstObsErr == 0 && tk.lastObsErr == 0 {
-		tk.noObsErr = true
+	if a.firstObsErr == 0 && a.lastObsErr == 0 {
+		a.noObsErr = true
 	}
 
-	tk.searchDistance(min_distance)
-	tk.searchDistance(max_distance)
-	tk.dRange(min_distance, max_distance, 0)
+	a.searchDistance(min_distance)
+	a.searchDistance(max_distance)
+	a.dRange(min_distance, max_distance, 0)
 
 	var score float64
-	for i, s := range tk.cs {
+	for i, s := range a.cs {
 		switch d := s.sumAllInClass + s.sumAllNonClass; {
 		case d > 0:
 			score = 100 * s.sumAllInClass / d
@@ -186,7 +188,7 @@ func (tk *tracklet) score() {
 		default:
 			score = 0
 		}
-		tk.classScores[i].Raw = score
+		a.classScores[i].Raw = score
 
 		switch d := s.sumUnkInClass + s.sumUnkNonClass; {
 		case d > 0:
@@ -196,18 +198,18 @@ func (tk *tracklet) score() {
 		default:
 			score = 0
 		}
-		tk.classScores[i].NoId = score
+		a.classScores[i].NoId = score
 	}
 }
 
-// setSOV sets sun-observer vectors in ecliptic coordinates in the tracklet
-// struct.  also sets soe, coe.
-func (tk *tracklet) sov(o observation.VObs) (sunObserver coord.Cart) {
+// setSOV sets sun-observer vectors in ecliptic coordinates in the arc struct.
+// also sets soe, coe.
+func (a *arc) sov(o observation.VObs) (sunObserver coord.Cart) {
 	var sunEarth, earthSite coord.Cart
-	sunEarth, tk.soe, tk.coe = astro.Se2000(o.Meas().MJD)
+	sunEarth, a.soe, a.coe = astro.Se2000(o.Meas().MJD)
 	earthSite = o.EarthObserverVect()
 	sunObserver.Sub(&earthSite, &sunEarth)
-	sunObserver.RotateX(&sunObserver, tk.soe, tk.coe)
+	sunObserver.RotateX(&sunObserver, a.soe, a.coe)
 	return
 }
 
@@ -215,7 +217,7 @@ func (tk *tracklet) sov(o observation.VObs) (sunObserver coord.Cart) {
 // for a specified distance
 //
 // Args:
-//   tk:  tracklet
+//   a:  arc
 //   d:  distance for computations
 //
 //Algorithm:
@@ -232,19 +234,19 @@ func (tk *tracklet) sov(o observation.VObs) (sunObserver coord.Cart) {
 //   true if any new bins were tagged.
 //   false if this distance saw no bins that hadn't been seen
 //    at other distances.
-func (tk *tracklet) searchDistance(d float64) (result bool) {
-	tk.clearDTags()
-	tk.dAnyTag = false
+func (a *arc) searchDistance(d float64) (result bool) {
+	a.clearDTags()
+	a.dAnyTag = false
 	var newTag bool
 
 	for ri := -1.; ri <= 1; ri++ {
 		for di := -1.; di <= 1; di++ {
-			tk.offsetMotionVector(ri, di)
-			tk.solveDistanceDependentVectors(d)
-			if tk.searchAngles() {
+			a.offsetMotionVector(ri, di)
+			a.solveDistanceDependentVectors(d)
+			if a.searchAngles() {
 				newTag = true
 			}
-			if tk.noObsErr {
+			if a.noObsErr {
 				return newTag
 			}
 		}
@@ -252,10 +254,10 @@ func (tk *tracklet) searchDistance(d float64) (result bool) {
 	return newTag
 }
 
-func (tk *tracklet) clearDTags() {
-	tk.dAnyTag = false
-	tk.dTag = make(map[int]bool)
-	for _, s := range tk.cs {
+func (a *arc) clearDTags() {
+	a.dAnyTag = false
+	a.dTag = make(map[int]bool)
+	for _, s := range a.cs {
 		if len(s.dInClass) > 0 {
 			s.dInClass = make(map[int]bool)
 		}
@@ -265,14 +267,14 @@ func (tk *tracklet) clearDTags() {
 	}
 }
 
-func (tk *tracklet) offsetMotionVector(rx, dx float64) {
+func (a *arc) offsetMotionVector(rx, dx float64) {
 	// solve unit vectors
-	tk.observerObjectUnit0 = tk.oouv(tk.first.Meas(), tk.firstObsErr, rx, dx)
-	tk.observerObjectUnit1 = tk.oouv(tk.last.Meas(), tk.lastObsErr, -rx, -dx)
+	a.observerObjectUnit0 = a.oouv(a.first.Meas(), a.firstObsErr, rx, dx)
+	a.observerObjectUnit1 = a.oouv(a.last.Meas(), a.lastObsErr, -rx, -dx)
 }
 
 // setOOUV solves observerObject unit vector for sky coordinates.
-func (tk *tracklet) oouv(
+func (a *arc) oouv(
 	sky *observation.VMeas,
 	obsErr float64,
 	rx, dx float64,
@@ -284,38 +286,38 @@ func (tk *tracklet) oouv(
 		Y: sra * cdec,
 		Z: sdec,
 	}
-	observerObjectUnit.RotateX(&observerObjectUnit, tk.soe, tk.coe)
+	observerObjectUnit.RotateX(&observerObjectUnit, a.soe, a.coe)
 	return
 }
 
-func (tk *tracklet) solveDistanceDependentVectors(d float64) {
+func (a *arc) solveDistanceDependentVectors(d float64) {
 	// observerObject0
-	tk.observerObject0Mag = d
-	tk.observerObject0 = tk.observerObjectUnit0
-	tk.observerObject0.MulScalar(&tk.observerObject0, d)
+	a.observerObject0Mag = d
+	a.observerObject0 = a.observerObjectUnit0
+	a.observerObject0.MulScalar(&a.observerObject0, d)
 
 	// sunObject0
-	tk.sunObject0.Add(&tk.sunObserver0, &tk.observerObject0)
-	tk.sunObject0MagSq = tk.sunObject0.Square()
-	tk.sunObject0Mag = math.Sqrt(tk.sunObject0MagSq)
+	a.sunObject0.Add(&a.sunObserver0, &a.observerObject0)
+	a.sunObject0MagSq = a.sunObject0.Square()
+	a.sunObject0Mag = math.Sqrt(a.sunObject0MagSq)
 
 	// observer1Object0
-	tk.observer1Object0.Sub(&tk.sunObject0, &tk.sunObserver1)
-	tk.observer1Object0MagSq = tk.observer1Object0.Square()
-	tk.observer1Object0Mag = math.Sqrt(tk.observer1Object0MagSq)
+	a.observer1Object0.Sub(&a.sunObject0, &a.sunObserver1)
+	a.observer1Object0MagSq = a.observer1Object0.Square()
+	a.observer1Object0Mag = math.Sqrt(a.observer1Object0MagSq)
 
 	// solve H mag
-	tk.hmag = astro.HMag(&tk.observerObject0, &tk.sunObject0,
-		tk.vmag, tk.observerObject0Mag, tk.sunObject0Mag)
-	tk.hmagBin = d2bin.H(tk.hmag)
+	a.hmag = astro.HMag(&a.observerObject0, &a.sunObject0,
+		a.vMag, a.observerObject0Mag, a.sunObject0Mag)
+	a.hmagBin = d2bin.H(a.hmag)
 }
 
 // dRange explores possible orbit space
 //
-// recursive tracklet method
+// recursive arc method
 //
 // Args:
-//   tk:          tracklet
+//   a:          arc
 //   d1, d2:      distance limits
 //   age:         a little history.  0 means a bin was just tagged.  1 is added
 //                at each level of recursion.
@@ -329,52 +331,52 @@ func (tk *tracklet) solveDistanceDependentVectors(d float64) {
 //
 //   - if young, recurse
 //
-func (tk *tracklet) dRange(d1, d2 float64, age int) {
+func (a *arc) dRange(d1, d2 float64, age int) {
 	dmid := (d1 + d2) * .5
 
-	if tk.searchDistance(dmid) || d2-d1 > minDistanceStep {
-		tk.dRange(d1, dmid, 0)
-		tk.dRange(dmid, d2, 0)
+	if a.searchDistance(dmid) || d2-d1 > minDistanceStep {
+		a.dRange(d1, dmid, 0)
+		a.dRange(dmid, d2, 0)
 		return
 	}
 
 	if age < ageLimit {
-		tk.dRange(d1, dmid, age+1)
-		tk.dRange(dmid, d2, age+1)
+		a.dRange(d1, dmid, age+1)
+		a.dRange(dmid, d2, age+1)
 	}
 }
 
-func (tk *tracklet) searchAngles() bool {
-	ang1, ang2, ok := tk.solveAngleRange()
+func (a *arc) searchAngles() bool {
+	ang1, ang2, ok := a.solveAngleRange()
 	if !ok {
 		return false
 	}
 
-	tk.aRange(ang1, ang2, 0)
+	a.aRange(ang1, ang2, 0)
 
-	if !tk.dAnyTag {
+	if !a.dAnyTag {
 		return false
 	}
 
 	var newTag bool
 
-	for i, dt := range tk.dTag {
+	for i, dt := range a.dTag {
 		if dt {
-			for cx, c := range tk.solver.classCompute {
-				s := tk.cs[cx]
+			for cx, c := range a.solver.classCompute {
+				s := a.cs[cx]
 				if s.dInClass[i] && !s.tagInClass[i] {
 					newTag = true
 					s.tagInClass[i] = true
-					s.sumAllInClass += tk.solver.all.Class[c][i]
-					s.sumUnkInClass += tk.solver.unk.Class[c][i]
+					s.sumAllInClass += a.solver.all.Class[c][i]
+					s.sumUnkInClass += a.solver.unk.Class[c][i]
 				}
 				if s.dNonClass[i] && !s.tagNonClass[i] {
 					newTag = true
 					s.tagNonClass[i] = true
 					s.sumAllNonClass +=
-						tk.solver.all.SS[i] - tk.solver.all.Class[c][i]
+						a.solver.all.SS[i] - a.solver.all.Class[c][i]
 					s.sumUnkNonClass +=
-						tk.solver.unk.SS[i] - tk.solver.unk.Class[c][i]
+						a.solver.unk.SS[i] - a.solver.unk.Class[c][i]
 				}
 			}
 		}
@@ -383,16 +385,16 @@ func (tk *tracklet) searchAngles() bool {
 }
 
 // parabolic limits
-func (tk *tracklet) solveAngleRange() (ang1, ang2 float64, ok bool) {
+func (a *arc) solveAngleRange() (ang1, ang2 float64, ok bool) {
 	// solve angle range at this distance
-	th := tk.observer1Object0.Dot(&tk.observerObjectUnit1) /
-		tk.observer1Object0Mag
+	th := a.observer1Object0.Dot(&a.observerObjectUnit1) /
+		a.observer1Object0Mag
 
-	tk.tz = math.Acos(th)
+	a.tz = math.Acos(th)
 
-	aa := tk.invdtsq
-	bb := -2 * tk.observer1Object0Mag * th * aa
-	cc := tk.observer1Object0MagSq*aa - 2*astro.U/tk.sunObject0Mag
+	aa := a.invdtsq
+	bb := -2 * a.observer1Object0Mag * th * aa
+	cc := a.observer1Object0MagSq*aa - 2*astro.U/a.sunObject0Mag
 	dsc := bb*bb - 4*aa*cc
 
 	// use ! > to catch cases where dsc is Inf or NaN at this point.
@@ -407,12 +409,12 @@ func (tk *tracklet) solveAngleRange() (ang1, ang2 float64, ok bool) {
 	for {
 		d2 := (-bb + sd1) * inv2aa
 		d2s := d2 * d2
-		nns := d2s + tk.observer1Object0MagSq -
-			2*d2*tk.observer1Object0Mag*th
+		nns := d2s + a.observer1Object0MagSq -
+			2*d2*a.observer1Object0Mag*th
 		nn := math.Sqrt(nns)
-		ca := (nns + tk.observer1Object0MagSq - d2s) /
-			(2 * nn * tk.observer1Object0Mag)
-		sa := d2 * math.Sin(tk.tz) / nn
+		ca := (nns + a.observer1Object0MagSq - d2s) /
+			(2 * nn * a.observer1Object0Mag)
+		sa := d2 * math.Sin(a.tz) / nn
 		ang2 = 2 * math.Atan2(sa, 1+ca)
 
 		if sd1 == sd {
@@ -428,7 +430,7 @@ func (tk *tracklet) solveAngleRange() (ang1, ang2 float64, ok bool) {
 // aRange explores the space between two angles (at a set distance)
 //
 // Args:
-//   tk:  tracklet with distance setup already done
+//   a:  arc with distance setup already done
 //   ang1, ang2:  search boundaries.
 //
 // Algorithm:
@@ -441,61 +443,61 @@ func (tk *tracklet) solveAngleRange() (ang1, ang2 float64, ok bool) {
 //   - if passed angle range is sufficiently large, recurse.
 //
 //   - age criterion: if a passed angle recently yielded a new bin, recurse.
-func (tk *tracklet) aRange(ang1, ang2 float64, age int) {
+func (a *arc) aRange(ang1, ang2 float64, age int) {
 	d3 := (ang2 - ang1) / 3
-	mid := ang1 + d3 + d3*tk.rnd.Float64()
+	mid := ang1 + d3 + d3*a.rnd.Float64()
 
-	if tk.tagAngle(mid) || d3 > minAngleStep {
-		tk.aRange(ang1, mid, 0)
-		tk.aRange(mid, ang2, 0)
+	if a.tagAngle(mid) || d3 > minAngleStep {
+		a.aRange(ang1, mid, 0)
+		a.aRange(mid, ang2, 0)
 		return
 	}
 
 	if age < ageLimit {
-		tk.aRange(ang1, mid, age+1)
-		tk.aRange(mid, ang2, age+1)
+		a.aRange(ang1, mid, age+1)
+		a.aRange(mid, ang2, age+1)
 	}
 }
 
 // tagAngle processes a single distance-angle combination.
 //
 // Args:
-//   tk:  tracklet with distance setup already done.
+//   a:  arc with distance setup already done.
 //   an:  angle for orbit solution
 //
 // Notes:
 //   solves orbit for passed angle, converts to bin indicies, sets bin tag
 //   and updates tag count.
-func (tk *tracklet) tagAngle(an float64) bool {
+func (a *arc) tagAngle(an float64) bool {
 	// compute object velocity scaled by gravitational constant
-	tk.v = tk.observerObjectUnit1
-	s := tk.observer1Object0Mag * math.Sin(an) / math.Sin(math.Pi-an-tk.tz)
-	tk.v.MulScalar(&tk.v, s)
-	tk.v.Sub(&tk.v, &tk.observer1Object0)
-	tk.v.MulScalar(&tk.v, tk.invdt*astro.InvK)
+	a.v = a.observerObjectUnit1
+	s := a.observer1Object0Mag * math.Sin(an) / math.Sin(math.Pi-an-a.tz)
+	a.v.MulScalar(&a.v, s)
+	a.v.Sub(&a.v, &a.observer1Object0)
+	a.v.MulScalar(&a.v, a.invdt*astro.InvK)
 
 	// compute (some) Keplarian elements
-	a, e, i, hv := astro.AeiHv(&tk.sunObject0, &tk.v, tk.sunObject0Mag)
+	sa, e, i, hv := astro.AeiHv(&a.sunObject0, &a.v, a.sunObject0Mag)
 	if hv == nil {
 		return false
 	}
-	tk.hv = *hv
+	a.hv = *hv
 
-	q := a * (1 - e)
+	q := sa * (1 - e)
 	iq, ie, ii, inModel := d2bin.Qei(q, e, i)
 	if !inModel {
 		return false
 	}
-	ih := tk.hmagBin
+	ih := a.hmagBin
 	bx := d2bin.Mx(iq, ie, ii, ih)
 
 	// meaning: some class was newly tagged for this bin at this distance.
 	// used as function return value, see below
 	var newTag bool
 
-	for cx, c := range tk.solver.classCompute {
-		s := tk.cs[cx]
-		if d2bin.CList[c].IsClass(q, e, i, tk.hmag) {
+	for cx, c := range a.solver.classCompute {
+		s := a.cs[cx]
+		if d2bin.CList[c].IsClass(q, e, i, a.hmag) {
 			if !s.dInClass[bx] {
 				s.dInClass[bx] = true
 				newTag = true
@@ -510,10 +512,10 @@ func (tk *tracklet) tagAngle(an float64) bool {
 	if newTag {
 		// meaning: some orbit was found at this distance.
 		// will generally only be false if beyond parabolic limit.
-		tk.dAnyTag = true
+		a.dAnyTag = true
 
 		// meaning: this bin intersects 2d surface at this distance
-		tk.dTag[bx] = true
+		a.dTag[bx] = true
 	}
 	// true return means "we're finding stuff, keep searching more
 	// angles at this distance"

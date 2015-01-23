@@ -66,13 +66,13 @@ func Main() {
 	// remainder of main constructs and starts all the concurrent parts
 	// of the program.
 
-	// tkChIn supplies trackets by reading obsfile.  It is fed by
-	// splitTracklets, running as a separate goroutine.  If splitTracklets
+	// arcChIn supplies trackets by reading obsfile.  It is fed by
+	// Split, running as a separate goroutine.  If Split
 	// encounters an error reading the file, it reports the error on errCh
 	// and terminates immediately.
-	tkChIn := make(chan *observation.Tracklet)
+	arcChIn := make(chan *observation.Arc)
 	errCh := make(chan error)
-	go mpcformat.SplitTracklets(f, ocdMap, tkChIn, errCh)
+	go mpcformat.Split(f, ocdMap, arcChIn, errCh)
 
 	// prCh is used to keep processed results in submission order.
 	// it is a buffered channel so that a fast worker can drop off the
@@ -83,17 +83,17 @@ func Main() {
 	// anyway.
 	maxWorkers := runtime.GOMAXPROCS(0)
 	prCh := make(chan chan string, maxWorkers*2)
-	tkChSeq := make(chan *tkSeq)
+	arcChSeq := make(chan *arcSeq)
 
-	// "dispatcher," dispatches tracklets to workers.
-	// for each tracklet, attach a return channel that works like a ticket
-	// for picking up the result of processing the tracklet.  wait for an
-	// available worker, send the tracklet to the worker and drop the
+	// "dispatcher," dispatches arcs to workers.
+	// for each arc, attach a return channel that works like a ticket
+	// for picking up the result of processing the arc.  wait for an
+	// available worker, send the arc to the worker and drop the
 	// ticket in the queue for printing.
 	go func() {
-		for tk := range tkChIn { // for each tracklet to be solved
-			rch := make(chan string, 1) // create return channel for tracklet
-			tkChSeq <- &tkSeq{tk, rch}  // queue tracklet for solving
+		for a := range arcChIn { // for each arc to be solved
+			rch := make(chan string, 1) // create return channel for arc
+			arcChSeq <- &arcSeq{a, rch} // queue arc for solving
 			prCh <- rch                 // queue return channel for printing
 		}
 		close(prCh)
@@ -102,15 +102,15 @@ func Main() {
 	// this function literal, run as a separate goroutine, starts
 	// the worker goroutines (solve.)  they are not all started up front,
 	// but only as dispatcher (described below) calls for them through avCh.
-	// after all, we may have more cores than tracklets.  once it has
+	// after all, we may have more cores than arcs.  once it has
 	// started the maximum number of workers, it's work is done.
 	go func() {
 		for n := 0; n < maxWorkers; n++ {
-			tk, ok := <-tkChSeq
+			a, ok := <-arcChSeq
 			if !ok {
 				return
 			}
-			go solve(solver, tk, tkChSeq, repeatable, opt)
+			go solve(solver, a, arcChSeq, repeatable, opt)
 		}
 	}()
 
@@ -140,17 +140,17 @@ func Main() {
 	}
 }
 
-type tkSeq struct {
-	tk  *observation.Tracklet
+type arcSeq struct {
+	a   *observation.Arc
 	rch chan string
 }
 
-// worker process, solves tracklets.
-// the first tracklet to solve will be waiting in tkCh.
-// additional tracklets are requested by sending tkCh back over avCh.
+// worker process, solves arcs.
+// the first arc to solve will be waiting in arcCh.
+// additional arc are requested by sending arcCh back over avCh.
 func solve(solver *d2solver.D2Solver,
-	tk *tkSeq, // first tracklet to solve
-	tkCh chan *tkSeq, // channel for getting more tracklets
+	a *arcSeq, // first arc to solve
+	arcCh chan *arcSeq, // channel for getting more arcs
 	repeatable bool,
 	opt *outputOptions) {
 	var rnd d2solver.Rand
@@ -160,7 +160,7 @@ func solve(solver *d2solver.D2Solver,
 		rnd = rand.New(rand.NewSource(time.Now().UnixNano()))
 	}
 	// this is an infinite loop.  it just runs until the program shuts down.
-	for ; ; tk = <-tkCh {
+	for ; ; a = <-arcCh {
 		if repeatable {
 			rnd.Seed(3)
 		}
@@ -172,7 +172,7 @@ func solve(solver *d2solver.D2Solver,
 		// of typical MPC observations varying in number, often missing
 		// magnitudes, and having limiting magnitude around 21.
 		var vmag, mSum, mCount float64
-		for _, obs := range tk.tk.Obs {
+		for _, obs := range a.a.Obs {
 			m := obs.Meas()
 			if m.VMag > 0 {
 				mSum += m.VMag
@@ -186,10 +186,10 @@ func solve(solver *d2solver.D2Solver,
 			vmag = 21
 		}
 
-		rms, classScores := solver.Solve(tk.tk, vmag, rnd)
+		rms, classScores := solver.Solve(a.a, vmag, rnd)
 
 		// build output line
-		ol := fmt.Sprintf("%7s", tk.tk.Desig)
+		ol := fmt.Sprintf("%7s", a.a.Desig)
 		if opt.rms {
 			if rs := fmt.Sprintf(" %5.2f", rms); len(rs) == 6 {
 				ol += rs
@@ -243,7 +243,7 @@ func solve(solver *d2solver.D2Solver,
 		}
 
 		// processing results sent on private result channel.
-		tk.rch <- ol // buffered.  just drop off results and continue
+		a.rch <- ol // buffered.  just drop off results and continue
 	}
 }
 
