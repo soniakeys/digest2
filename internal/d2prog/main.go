@@ -72,7 +72,7 @@ func Main() {
 	// and terminates immediately.
 	arcChIn := make(chan *observation.Arc)
 	errCh := make(chan error)
-	go mpcformat.Split(f, ocdMap, arcChIn, errCh)
+	go splitter(f, ocdMap, arcChIn, errCh)
 
 	// prCh is used to keep processed results in submission order.
 	// it is a buffered channel so that a fast worker can drop off the
@@ -143,6 +143,51 @@ func Main() {
 type arcSeq struct {
 	a   *observation.Arc
 	rch chan string
+}
+
+// parse errors and invalid arcs are dropped without notification.
+func splitter(iObs io.Reader, ocdMap observation.ParallaxMap, arcCh chan *observation.Arc, errCh chan error) {
+	for s := mpcformat.ArcSplitter(iObs, ocdMap); ; {
+		a, readErr, parseErr := s()
+		if readErr != nil && readErr != io.EOF {
+			errCh <- readErr
+			break
+		}
+		if parseErr == nil {
+			sendValid(a, arcCh)
+		}
+		if readErr == io.EOF {
+			break
+		}
+	}
+	close(arcCh)
+}
+
+// checks that observations make a valid arc, allocates and sends.
+func sendValid(a *observation.Arc, arcCh chan *observation.Arc) {
+	if len(a.Obs) < 2 {
+		return
+	}
+	// the first observation time must be positive and
+	// observation times must increase after that
+	var t0 float64
+	for _, o := range a.Obs {
+		t := o.Meas().MJD
+		if t <= t0 {
+			return
+		}
+		t0 = t
+	}
+	// object must show motion over the arc
+	first := a.Obs[0].Meas()
+	last := a.Obs[len(a.Obs)-1].Meas()
+	if first.RA == last.RA && first.Dec == last.Dec {
+		return
+	}
+	arcCh <- &observation.Arc{
+		Desig: a.Desig,
+		Obs:   append([]observation.VObs{}, a.Obs...),
+	}
 }
 
 // worker process, solves arcs.
