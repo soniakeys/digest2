@@ -148,17 +148,19 @@ type arcSeq struct {
 // parse errors and invalid arcs are dropped without notification.
 func splitter(iObs io.Reader, ocdMap observation.ParallaxMap, arcCh chan *observation.Arc, errCh chan error) {
 	for s := mpcformat.ArcSplitter(iObs, ocdMap); ; {
-		a, readErr, parseErr := s()
-		if readErr != nil && readErr != io.EOF {
-			errCh <- readErr
-			break
-		}
-		if parseErr == nil {
+		a, err := s()
+		if err == nil {
 			sendValid(a, arcCh)
+			continue
 		}
-		if readErr == io.EOF {
+		if err == io.EOF {
 			break
 		}
+		if _, ok := err.(mpcformat.ArcError); ok {
+			continue
+		}
+		errCh <- err
+		break
 	}
 	close(arcCh)
 }

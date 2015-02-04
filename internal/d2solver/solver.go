@@ -477,11 +477,10 @@ func (a *arc) tagAngle(an float64) bool {
 	a.v.MulScalar(&a.v, a.invdt*astro.InvK)
 
 	// compute (some) Keplarian elements
-	sa, e, i, hv := astro.AeiHv(&a.sunObject0, &a.v, a.sunObject0Mag)
-	if hv == nil {
+	sa, e, i, ok := astro.AeiHv(&a.sunObject0, &a.v, a.sunObject0Mag, &a.hv)
+	if !ok {
 		return false
 	}
-	a.hv = *hv
 
 	q := sa * (1 - e)
 	iq, ie, ii, inModel := d2bin.Qei(q, e, i)
