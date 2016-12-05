@@ -10,6 +10,7 @@ import (
 	"github.com/soniakeys/coord"
 	"github.com/soniakeys/digest2/internal/d2bin"
 	"github.com/soniakeys/observation"
+	"github.com/soniakeys/unit"
 )
 
 // D2Solver contains data and parameters needed for the digest2 algorithm.
@@ -19,13 +20,13 @@ import (
 type D2Solver struct {
 	all, unk      d2bin.Model
 	classCompute  []int // from config file
-	obsErrMap     map[string]float64
-	obsErrDefault float64
+	obsErrMap     map[string]unit.Angle
+	obsErrDefault unit.Angle
 }
 
 // New creates a D2Solver object from passed parameters.
 func New(all, unk d2bin.Model, classCompute []int,
-	obsErrMap map[string]float64, obsErrDefault float64) *D2Solver {
+	obsErrMap map[string]unit.Angle, obsErrDefault unit.Angle) *D2Solver {
 	return &D2Solver{all, unk, classCompute, obsErrMap, obsErrDefault}
 }
 
@@ -35,7 +36,7 @@ func New(all, unk d2bin.Model, classCompute []int,
 // against fitted linear great circle motion.
 // Digest2 scores are returned in the slice classScores.
 func (s *D2Solver) Solve(obs *observation.Arc, vMag float64,
-	rnd Rand) (rms float64, classScores []Scores) {
+	rnd Rand) (rms unit.Angle, classScores []Scores) {
 
 	a := s.newArc(obs, vMag, rnd) // create workspace
 	a.score()                     // run the algorithm
@@ -58,7 +59,7 @@ type arc struct {
 	rnd    Rand
 
 	// result values read by digest2.solve
-	rms         float64 // rms for arc as a whole
+	rms         unit.Angle // rms for arc as a whole
 	classScores []Scores
 
 	cs []*classStats
@@ -66,7 +67,7 @@ type arc struct {
 	first, last observation.VObs // obs used for motion vector
 
 	// observational error associated with first, last of motion vector
-	firstObsErr, lastObsErr float64
+	firstObsErr, lastObsErr unit.Angle
 	noObsErr                bool
 
 	// distance independent working variables.  computed once per arc.
@@ -276,11 +277,11 @@ func (a *arc) offsetMotionVector(rx, dx float64) {
 // setOOUV solves observerObject unit vector for sky coordinates.
 func (a *arc) oouv(
 	sky *observation.VMeas,
-	obsErr float64,
+	obsErr unit.Angle,
 	rx, dx float64,
 ) (observerObjectUnit coord.Cart) {
-	sdec, cdec := math.Sincos(sky.Dec + dx*obsErr*.5)
-	sra, cra := math.Sincos(sky.Sphr.RA + rx*obsErr*.5*cdec)
+	sdec, cdec := (sky.Dec + obsErr.Mul(dx*.5)).Sincos()
+	sra, cra := (sky.RA.Angle() + obsErr.Mul(rx*.5*cdec)).Sincos()
 	observerObjectUnit = coord.Cart{
 		X: cra * cdec,
 		Y: sra * cdec,

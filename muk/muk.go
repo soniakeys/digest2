@@ -21,6 +21,7 @@ import (
 
 	"github.com/soniakeys/digest2/internal/d2bin"
 	"github.com/soniakeys/exit"
+	"github.com/soniakeys/unit"
 )
 
 const parentImport = "digest2"
@@ -187,7 +188,11 @@ This process is often time consuming.
 	}
 	d2bin.QPart = readPart('q')
 	d2bin.EPart = readPart('e')
-	d2bin.IPart = readPart('i')
+	ip := readPart('i')
+	d2bin.IPart = make([]unit.Angle, len(ip))
+	for i, p := range ip {
+		d2bin.IPart[i] = unit.AngleFromDeg(p)
+	}
 	d2bin.HPart = readPart('h')
 	d2bin.LastH = len(d2bin.HPart) - 1
 	d2bin.MSize = len(d2bin.QPart) * len(d2bin.EPart) * len(d2bin.IPart) * len(d2bin.HPart)
@@ -282,13 +287,14 @@ This process is often time consuming.
 			parsefails++
 			continue
 		}
+		ia := unit.AngleFromDeg(i)
 		h, err := strconv.ParseFloat(strings.TrimSpace(line[42:47]), 64)
 		if err != nil {
 			parsefails++
 			continue
 		}
 		q := a * (1 - e)
-		iq, ie, ii, ih, inModel := d2bin.Qeih(q, e, i, h)
+		iq, ie, ii, ih, inModel := d2bin.Qeih(q, e, ia, h)
 		if !inModel {
 			outofmodel++
 			continue
@@ -298,7 +304,7 @@ This process is often time consuming.
 		bx := d2bin.Mx(iq, ie, ii, ih)
 		known.SS[bx]++
 		for c, cs := range d2bin.CList {
-			if cs.IsClass(q, e, i, h) {
+			if cs.IsClass(q, e, ia, h) {
 				known.Class[c][bx]++
 			}
 		}
@@ -334,9 +340,9 @@ This process is often time consuming.
 			}
 			dae := dq * (e1 - e0) / (d0 + d1)
 			e0 = e1
-			i0 := 0.
+			i0 := unit.Angle(0)
 			for _, i1 := range d2bin.IPart {
-				daei := dae * (i1 - i0)
+				daei := dae * (i1 - i0).Deg()
 				i0 = i1
 				h0 := 0.
 				for _, h1 := range d2bin.HPart {

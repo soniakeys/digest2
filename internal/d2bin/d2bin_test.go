@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/soniakeys/digest2/internal/d2bin"
+	"github.com/soniakeys/unit"
 )
 
 func ExampleNew() {
@@ -32,7 +33,7 @@ func TestModel(t *testing.T) {
 	t.Log("LastH:", d2bin.LastH, len(d2bin.HPart)-1)
 
 	// class list example
-	e, i, h := .1, 20., 18.
+	e, i, h := .1, unit.AngleFromDeg(20), 18.
 	q := 1.8 * (1 - e)
 	t.Logf("%-14s: %t\n",
 		d2bin.CList[5].Heading, d2bin.CList[5].IsClass(q, e, i, h))

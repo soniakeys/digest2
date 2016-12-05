@@ -8,6 +8,7 @@ import (
 	"github.com/soniakeys/coord"
 	"github.com/soniakeys/lmfit"
 	"github.com/soniakeys/observation"
+	"github.com/soniakeys/unit"
 )
 
 // twoObs computes two observations suitable for computing motion vector.
@@ -16,7 +17,7 @@ import (
 // at least two obs must be in  a.obs.  a.rms is set to the rms over
 // the whole tracklet.  Return values firstRms and lastRms will be
 // non-zero if a GC fit applies to the corresponding motion vector endpoint.
-func (a *arc) twoObs() (firstRms, lastRms float64) {
+func (a *arc) twoObs() (firstRms, lastRms unit.Angle) {
 	obs := a.obs.Obs
 	// default obs
 	a.first = obs[0]
@@ -28,11 +29,11 @@ func (a *arc) twoObs() (firstRms, lastRms float64) {
 	// > 2 obs, do a great circle fit over all obs to get rms return value.
 	// Fit may also be used in some cases for synthesizing observations.
 	t := make([]float64, len(obs))
-	s := make(coord.SphrS, len(obs))
+	s := make(coord.EquaS, len(obs))
 	for i, o := range obs {
 		m := o.Meas()
 		t[i] = m.MJD
-		s[i] = m.Sphr
+		s[i] = m.Equa
 	}
 	lmf := lmfit.New(t, s)
 	a.rms = lmf.Rms() // set tracklet rms
@@ -94,7 +95,7 @@ func (a *arc) twoObs() (firstRms, lastRms float64) {
 			Par:   par0,
 		}
 		so.VMeas.MJD = t17
-		so.VMeas.Sphr = *lmf.Pos(t17)
+		so.VMeas.Equa = *lmf.Pos(t17)
 		a.first = so
 
 		so = &observation.SiteObs{
@@ -102,7 +103,7 @@ func (a *arc) twoObs() (firstRms, lastRms float64) {
 			Par:   par0,
 		}
 		so.VMeas.MJD = t83
-		so.VMeas.Sphr = *lmf.Pos(t83)
+		so.VMeas.Equa = *lmf.Pos(t83)
 		a.last = so
 
 		return a.rms, a.rms
@@ -181,7 +182,7 @@ func oneObs(
 	obssUseAllObs bool,
 	pt float64,
 	obs []observation.VObs,
-) (result *observation.SiteObs, rms float64) {
+) (result *observation.SiteObs, rms unit.Angle) {
 	// a default result. (again, obs is guaranteed to be all ground based)
 	result = obs[o1].(*observation.SiteObs)
 
@@ -213,11 +214,11 @@ func oneObs(
 		// connecting the points.
 		r2 := *(obs[o2].(*observation.SiteObs))
 		t := make([]float64, 2)
-		s := make(coord.SphrS, 2)
+		s := make(coord.EquaS, 2)
 		t[0] = result.MJD
-		s[0] = result.Sphr
+		s[0] = result.Equa
 		t[1] = r2.MJD
-		s[1] = r2.Sphr
+		s[1] = r2.Equa
 		lmf := lmfit.New(t, s)
 		if obssUseAllObs {
 			// gc midpoint
@@ -226,7 +227,7 @@ func oneObs(
 			// gc at pt
 			r2.MJD = pt
 		}
-		r2.Sphr = *lmf.Pos(r2.MJD)
+		r2.Equa = *lmf.Pos(r2.MJD)
 		return &r2, 0
 	}
 
@@ -258,15 +259,15 @@ func oneObs(
 	// gc fit, result is computed obs at time tr
 	np := o2 - o1 + 1
 	t := make([]float64, np)
-	s := make(coord.SphrS, np)
+	s := make(coord.EquaS, np)
 	for i, v := range obs[o1 : o2+1] {
 		m := v.(*observation.SiteObs)
 		t[i] = m.MJD
-		s[i] = m.Sphr
+		s[i] = m.Equa
 	}
 	lmf := lmfit.New(t, s)
 	r2 := *result
 	r2.MJD = tr
-	r2.Sphr = *lmf.Pos(tr)
+	r2.Equa = *lmf.Pos(tr)
 	return &r2, lmf.Rms() // return an rms for this obs
 }

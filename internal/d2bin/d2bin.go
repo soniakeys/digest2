@@ -9,6 +9,8 @@ import (
 	"math"
 	"os"
 	"time"
+
+	"github.com/soniakeys/unit"
 )
 
 // Sfn, the binned model
@@ -72,9 +74,12 @@ func ReadFile(fn string) (all, unk Model, aoDate time.Time, aoLines int, err err
 // Package variables that define the shape and size of the model.  They are
 // constant after being set (in s3mbin) or loaded (in muk and digest2.)
 var (
-	QPart, EPart, IPart, HPart []float64
-	MSize                      int
-	LastH                      int
+	QPart []float64
+	EPart []float64
+	IPart []unit.Angle
+	HPart []float64
+	MSize int
+	LastH int
 )
 
 // Mx computes an index into the flat representation of a model.
@@ -83,7 +88,7 @@ func Mx(iq, ie, ii, ih int) int {
 }
 
 // Qeih takes four real-valued elements and returns their bin indexes.
-func Qeih(q, e, i, h float64) (qx, ex, ix, hx int, inModel bool) {
+func Qeih(q, e float64, i unit.Angle, h float64) (qx, ex, ix, hx int, inModel bool) {
 	if qx, ex, ix, inModel = Qei(q, e, i); inModel {
 		hx = H(h)
 	}
@@ -91,7 +96,7 @@ func Qeih(q, e, i, h float64) (qx, ex, ix, hx int, inModel bool) {
 }
 
 // Qei takes three real-valued elements and returns their bin indexes.
-func Qei(q, e, i float64) (qx, ex, ix int, inModel bool) {
+func Qei(q, e float64, i unit.Angle) (qx, ex, ix int, inModel bool) {
 	for q >= QPart[qx] {
 		qx++
 		if qx == len(QPart) {
@@ -123,7 +128,7 @@ func H(h float64) (ih int) {
 // Clist represents the modeled orbit classes
 var CList = []struct {
 	Abbr, Heading string
-	IsClass       func(q, e, i, h float64) bool
+	IsClass       func(q, e float64, i unit.Angle, h float64) bool
 }{
 	{"Int", "MPC interest.", isMpcint},
 	{"NEO", "NEO(q < 1.3)", isNeo},
@@ -145,39 +150,39 @@ var CList = []struct {
 // 'MPC interesting' objects
 // The definition of MPC interesting implemented here is:
 // any of: q < 1.3, e > .5, i > 40, or Q > 10
-func isMpcint(q, e, i, h float64) bool {
-	return q < 1.3 || e >= .5 || i >= 40 || q*(1+e)/(1-e) > 10
+func isMpcint(q, e float64, i unit.Angle, h float64) bool {
+	return q < 1.3 || e >= .5 || i >= 40*math.Pi/180 || q*(1+e)/(1-e) > 10
 }
 
 // 'NEO' objects
 // The definition of NEO implemented here is q < 1.3
-func isNeo(q, e, i, h float64) bool {
+func isNeo(q, e float64, i unit.Angle, h float64) bool {
 	return q < 1.3
 }
 
 // H18 NEOs
 // H rounded to nearest integer <= 18
-func isH18Neo(q, e, i, h float64) bool {
+func isH18Neo(q, e float64, i unit.Angle, h float64) bool {
 	return q < 1.3 && h < 18.5
 }
 
 // H22 NEOs
 // H rounded to nearest integer <= 22
-func isCMO(q, e, i, h float64) bool {
+func isCMO(q, e float64, i unit.Angle, h float64) bool {
 	return q < 1.3 && h < 22.5
 }
 
 // Mars Crosser
 // 1.3 <= q < 1.67, Q > 1.58
-func isMarsCrosser(q, e, i, h float64) bool {
+func isMarsCrosser(q, e float64, i unit.Angle, h float64) bool {
 	return q < 1.67 && q >= 1.3 && q*(1+e)/(1-e) > 1.58
 }
 
 // Hungarias
 // 1.78>a>2.0, e<.18, 16 < i < 28
 // (a node test would be nice...)
-func isHungaria(q, e, i, h float64) bool {
-	if e > .18 || i < 16 || i > 34 {
+func isHungaria(q, e float64, i unit.Angle, h float64) bool {
+	if e > .18 || i < 16*math.Pi/180 || i > 34*math.Pi/180 {
 		return false
 	}
 	a := q / (1 - e)
@@ -186,8 +191,8 @@ func isHungaria(q, e, i, h float64) bool {
 
 // Phocaeas
 // q>1.5, 2.2<a<2.45, 20<i<27
-func isPhocaea(q, e, i, h float64) bool {
-	if q < 1.5 || i < 20 || i > 27 {
+func isPhocaea(q, e float64, i unit.Angle, h float64) bool {
+	if q < 1.5 || i < 20*math.Pi/180 || i > 27*math.Pi/180 {
 		return false
 	}
 	a := q / (1 - e)
@@ -196,18 +201,18 @@ func isPhocaea(q, e, i, h float64) bool {
 
 // Inner Main Belt
 // q>1.67, 2.1<a<2.5, i<7 at inner edge, <17 at outer
-func isInnerMB(q, e, i, h float64) bool {
+func isInnerMB(q, e float64, i unit.Angle, h float64) bool {
 	if q < 1.67 {
 		return false
 	}
 	a := q / (1 - e)
-	return a < 2.5 && a > 2.1 && i < ((a-2.1)/.4)*10+7
+	return a < 2.5 && a > 2.1 && i < unit.AngleFromDeg(((a-2.1)/.4)*10+7)
 }
 
 // Hansas
 // 2.55<a<2.72 e<.25, 20<i<23.5
-func isHansa(q, e, i, h float64) bool {
-	if e > .25 || i < 20 || i > 23.5 {
+func isHansa(q, e float64, i unit.Angle, h float64) bool {
+	if e > .25 || i < 20*math.Pi/180 || i > 23.5*math.Pi/180 {
 		return false
 	}
 	a := q / (1 - e)
@@ -216,8 +221,8 @@ func isHansa(q, e, i, h float64) bool {
 
 // Pallas group
 // 2.5<a<2.8, e<.35, 24<i<37
-func isPallas(q, e, i, h float64) bool {
-	if e > .35 || i < 24 || i > 37 {
+func isPallas(q, e float64, i unit.Angle, h float64) bool {
+	if e > .35 || i < 24*math.Pi/180 || i > 37*math.Pi/180 {
 		return false
 	}
 	a := q / (1 - e)
@@ -226,8 +231,8 @@ func isPallas(q, e, i, h float64) bool {
 
 // Mid Main Belt
 // 2.5<a<2.8, e<.45, i<20
-func isMidMB(q, e, i, h float64) bool {
-	if e > .45 || i > 20 {
+func isMidMB(q, e float64, i unit.Angle, h float64) bool {
+	if e > .45 || i > 20*math.Pi/180 {
 		return false
 	}
 	a := q / (1 - e)
@@ -236,18 +241,18 @@ func isMidMB(q, e, i, h float64) bool {
 
 // Outer Main Belt
 //  2.8<a<3.25 e<.4, i < 20 inner edge, i < 36 outer edge
-func isOuterMB(q, e, i, h float64) bool {
+func isOuterMB(q, e float64, i unit.Angle, h float64) bool {
 	if e > .4 {
 		return false
 	}
 	a := q / (1 - e)
-	return a > 2.8 && a < 3.25 && i < ((a-2.8)/.45)*16+20
+	return a > 2.8 && a < 3.25 && i < unit.AngleFromDeg(((a-2.8)/.45)*16+20)
 }
 
 // Hildas
 // 3.9<a<4.02, e<.4, i<18
-func isHilda(q, e, i, h float64) bool {
-	if i > 18 || e > .4 {
+func isHilda(q, e float64, i unit.Angle, h float64) bool {
+	if i > 18*math.Pi/180 || e > .4 {
 		return false
 	}
 	a := q / (1 - e)
@@ -256,8 +261,8 @@ func isHilda(q, e, i, h float64) bool {
 
 // Trojans
 // 5.05<a<5.35, e<.22, i<38
-func isTrojan(q, e, i, h float64) bool {
-	if e > .22 || i > 38 {
+func isTrojan(q, e float64, i unit.Angle, h float64) bool {
+	if e > .22 || i > 38*math.Pi/180 {
 		return false
 	}
 	a := q / (1 - e)
@@ -266,10 +271,10 @@ func isTrojan(q, e, i, h float64) bool {
 
 // Jupiter Family Comets
 // 2 < Tj < 3, q >= 1.67
-func isJFC(q, e, i, h float64) bool {
+func isJFC(q, e float64, i unit.Angle, h float64) bool {
 	if q < 1.3 {
 		return false
 	}
-	tj := 5.2*(1-e)/q + 2*math.Sqrt(q*(1+e)/5.2)*math.Cos(i*math.Pi/180)
+	tj := 5.2*(1-e)/q + 2*math.Sqrt(q*(1+e)/5.2)*i.Cos()
 	return tj < 3 && tj > 2
 }

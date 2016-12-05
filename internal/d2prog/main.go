@@ -9,7 +9,6 @@ import (
 	"go/build"
 	"io"
 	"log"
-	"math"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -25,6 +24,7 @@ import (
 	"github.com/soniakeys/lcg"
 	"github.com/soniakeys/mpcformat"
 	"github.com/soniakeys/observation"
+	"github.com/soniakeys/unit"
 )
 
 const parentImport = "digest2"
@@ -378,11 +378,11 @@ type outputOptions struct {
 }
 
 func readConfig(cl *commandLine, ocdMap observation.ParallaxMap) (classCompute []int, repeatable bool,
-	obsErrMap map[string]float64, obsErrDefault float64,
+	obsErrMap map[string]unit.Angle, obsErrDefault unit.Angle,
 	opt *outputOptions) {
 	// default observational error = 1 arc sec
-	obsErrDefault = 1 * math.Pi / (180 * 3600)
-	obsErrMap = make(map[string]float64)
+	obsErrDefault = unit.AngleFromSec(1)
+	obsErrMap = make(map[string]unit.Angle)
 	opt = new(outputOptions)
 	// default configuration
 	opt.classPossible = true
@@ -417,7 +417,7 @@ func readConfig(cl *commandLine, ocdMap observation.ParallaxMap) (classCompute [
 			return "Observational error > 10 arc seconds not allowed."
 		}
 		if ss[1] == "" {
-			obsErrDefault = oe * math.Pi / (180 * 3600)
+			obsErrDefault = unit.AngleFromSec(oe)
 			return ""
 		}
 		// replace or remove this check if code is changed in
@@ -427,7 +427,7 @@ func readConfig(cl *commandLine, ocdMap observation.ParallaxMap) (classCompute [
 		if !ok {
 			return "Obscode not recognized."
 		}
-		obsErrMap[ss[1]] = oe * math.Pi / (180 * 3600)
+		obsErrMap[ss[1]] = unit.AngleFromSec(oe)
 		return ""
 	}
 

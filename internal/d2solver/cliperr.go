@@ -2,11 +2,11 @@
 
 package d2solver
 
-import "math"
+import "github.com/soniakeys/unit"
 
 // clipErr computes the obs err to use based on defaults and on rms computed
 // from observations in the tracklet.
-func (s *D2Solver) clipErr(computedRms float64, qual string) (clipped float64) {
+func (s *D2Solver) clipErr(computedRms unit.Angle, qual string) (clipped unit.Angle) {
 	// look for config file specified obs err for this site
 	defaultErr, ok := s.obsErrMap[qual]
 	if !ok {
@@ -22,12 +22,9 @@ func (s *D2Solver) clipErr(computedRms float64, qual string) (clipped float64) {
 		// if no rms could be computed, use the default obs err.
 		return defaultErr
 	}
-	// finally, consider rms, except it is in arc seconds. we need err
-	// in radians
-	computedErr := computedRms * math.Pi / (180 * 3600)
-	// then just return the greater of the two
-	if defaultErr > computedErr {
+	// finally, consider rms, then just return the greater of the two
+	if defaultErr > computedRms {
 		return defaultErr
 	}
-	return computedErr
+	return computedRms
 }
