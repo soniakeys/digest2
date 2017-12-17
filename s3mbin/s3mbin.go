@@ -48,6 +48,7 @@ import (
 
 	"github.com/soniakeys/digest2/internal/d2bin"
 	"github.com/soniakeys/exit"
+	"github.com/soniakeys/unit"
 )
 
 const parentImport = "digest2"
@@ -62,7 +63,11 @@ func init() {
 		1.4, 1.5, 1.67, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 3,
 		3.2, 3.5, 4, 4.5, 5, 5.5, 10, 20, 30, 40, 100}
 	d2bin.EPart = []float64{.1, .2, .3, .4, .5, .7, .9, 1.1}
-	d2bin.IPart = []float64{2, 5, 10, 15, 20, 25, 30, 40, 60, 90, 180}
+	iParts := []float64{2, 5, 10, 15, 20, 25, 30, 40, 60, 90, 180}
+	d2bin.IPart = make([]unit.Angle, len(iParts))
+	for i, d := range iParts {
+		d2bin.IPart[i] = unit.AngleFromDeg(d)
+	}
 	d2bin.HPart = []float64{6, 8, 10, 11, 12, 13, 14, 15,
 		16, 17, 18, 19, 20, 21, 22, 23, 24, 25.5}
 	d2bin.MSize = len(d2bin.QPart) * len(d2bin.EPart) *
@@ -108,7 +113,9 @@ func binS3m(m *d2bin.Model, fn string, clipNeo bool) {
 			break
 		}
 	}
-	var q, e, i, h float64
+	var q, e, h float64
+	var i unit.Angle
+	i180 := unit.AngleFromDeg(180)
 loop:
 	for {
 		f := strings.Fields(line)
@@ -122,13 +129,15 @@ loop:
 		if e, err = strconv.ParseFloat(f[3], 64); err != nil {
 			break
 		}
-		if i, err = strconv.ParseFloat(f[4], 64); err != nil {
+		if d, err := strconv.ParseFloat(f[4], 64); err != nil {
 			break
+		} else {
+			i = unit.AngleFromDeg(d)
 		}
 		if h, err = strconv.ParseFloat(f[8], 64); err != nil {
 			break
 		}
-		if q <= 0 || e < 0 || e > 1.1 || i < 0 || i >= 180 {
+		if q <= 0 || e < 0 || e > 1.1 || i < 0 || i >= i180 {
 			goto read // crazy data
 		}
 		nOrbits++
