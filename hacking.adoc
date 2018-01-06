@@ -1,0 +1,51 @@
+= Hacking
+
+Notes on the structure of this Go implementation of Digest2.
+
+== Repo contents
+
+At the top is the Digest2 program, but it is a one-liner to an internal package,
+with the idea that the package would be testable.  The internal package
+implementing the CLI is `d2prog`.  Other internal packages are `d2bin` and
+`d2solver`.
+
+Besides internal, other subdirectories at the top hold ancillary programs
+`muk`, `s3mbin`, and `mcc`.
+
+== External packages
+
+A number of packages were split from digest2.
+
+astro:: A start at general purpose astronomy library
+coord:: A start at general purpose coordinate represenation
+exit:: A utility to terminate a program.
+lcg:: A primitive linear congruential pseudo random number generator
+lmfit:: Linear great circle motion fitting
+mpcformat:: Decoding of various MPC formats
+observation:: Representation of astrometric observations
+unit:: Types for some units of revolution.
+
+.Dependencies:
+----
+  unit--- 
+  |  |   \
+  |  |    \
+  | coord  \
+  |  |   \  \
+  |  |   astro
+  |  |    |
+  observation
+----
+
+|===
+|Package|% Coverage
+|astro      |61.8
+|coord      |67.5
+|exit       |0
+|lcg        |0
+|lmfit      |96.7
+|mpcformat  |48.7
+|observation|12.5
+|unit       |100
+|===
+

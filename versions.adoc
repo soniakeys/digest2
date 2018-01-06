@@ -1,10 +1,10 @@
-# Version history
+= Version history
 
-## 15 Jan 2015
+== 15 Jan 2015
 
 First compile and run from GitHub.  No special version number for this.
 It surely needs some changes.
 
-## Previously
+== Previously
 
 Previous versions on code.google.com and sourceforge.
