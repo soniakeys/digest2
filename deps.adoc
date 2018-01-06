@@ -1,0 +1,29 @@
+= Digest2 package dependencies
+
+A number of packages were split from digest2.
+
+astro:: A start at general purpose astronomy library
+unit:: Types for some units of"revolution.
+coord:: A start at general purpose coordinate represenation
+observation:: Representation of astrometric observations
+
+.Dependency:
+----
+  unit---
+  |  |   \
+  |  |    \
+  | coord  \
+  |  |   \  \
+  |  |   astro
+  |  |    |
+  observation
+----
+
+|===
+|Package|% Coverage
+|astro      |61.8
+|unit       |100
+|coord      |67.5
+|observation|12.5
+|===
+
