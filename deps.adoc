@@ -3,7 +3,7 @@
 A number of packages were split from digest2.
 
 astro:: A start at general purpose astronomy library
-unit:: Types for some units of"revolution.
+unit:: Types for some units of revolution.
 coord:: A start at general purpose coordinate represenation
 observation:: Representation of astrometric observations
 
