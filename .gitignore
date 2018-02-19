@@ -2,3 +2,5 @@ digest2.gmodel
 digest2.obscodes
 *.obs
 astorb.dat
+Gopkg.lock
+vendor/
