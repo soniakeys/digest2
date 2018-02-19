@@ -9,7 +9,6 @@ import (
 	"go/build"
 	"io"
 	"log"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -18,10 +17,11 @@ import (
 	"strings"
 	"time"
 
+	xrand "golang.org/x/exp/rand"
+
 	"github.com/soniakeys/digest2/internal/d2bin"
 	"github.com/soniakeys/digest2/internal/d2solver"
 	"github.com/soniakeys/exit"
-	"github.com/soniakeys/lcg"
 	"github.com/soniakeys/mpcformat"
 	"github.com/soniakeys/observation"
 	"github.com/soniakeys/unit"
@@ -200,11 +200,9 @@ func solve(solver *d2solver.D2Solver,
 	arcCh chan *arcSeq, // channel for getting more arcs
 	repeatable bool,
 	opt *outputOptions) {
-	var rnd d2solver.Rand
-	if repeatable {
-		rnd = lcg.New()
-	} else {
-		rnd = rand.New(rand.NewSource(time.Now().UnixNano()))
+	rnd := xrand.New(&xrand.PCGSource{})
+	if !repeatable {
+		rnd.Seed(uint64(time.Now().UnixNano()))
 	}
 	// this is an infinite loop.  it just runs until the program shuts down.
 	for ; ; a = <-arcCh {

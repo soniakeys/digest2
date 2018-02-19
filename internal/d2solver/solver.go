@@ -6,6 +6,8 @@ package d2solver
 import (
 	"math"
 
+	xrand "golang.org/x/exp/rand"
+
 	"github.com/soniakeys/astro"
 	"github.com/soniakeys/coord"
 	"github.com/soniakeys/digest2/internal/d2bin"
@@ -36,8 +38,7 @@ func New(all, unk d2bin.Model, classCompute []int,
 // against fitted linear great circle motion.
 // Digest2 scores are returned in the slice classScores.
 func (s *D2Solver) Solve(obs *observation.Arc, vMag float64,
-	rnd Rand) (rms unit.Angle, classScores []Scores) {
-
+	rnd *xrand.Rand) (rms unit.Angle, classScores []Scores) {
 	a := s.newArc(obs, vMag, rnd) // create workspace
 	a.score()                     // run the algorithm
 	return a.rms, a.classScores
@@ -56,7 +57,7 @@ type arc struct {
 	solver *D2Solver
 	obs    *observation.Arc
 	vMag   float64
-	rnd    Rand
+	rnd    *xrand.Rand
 
 	// result values read by digest2.solve
 	rms         unit.Angle // rms for arc as a whole
@@ -101,7 +102,7 @@ type arc struct {
 }
 
 func (s *D2Solver) newArc(obs *observation.Arc, vMag float64,
-	rnd Rand) *arc {
+	rnd *xrand.Rand) *arc {
 
 	a := &arc{
 		solver:      s,
@@ -128,16 +129,6 @@ type classStats struct {
 	sumAllInClass, sumAllNonClass float64
 	sumUnkInClass, sumUnkNonClass float64
 	dInClass, dNonClass           map[int]bool
-}
-
-// Rand is an interface allowing the random number generator used by the
-// solver to be be swapped between the standard library function and
-// a simple linear congruential generator that can be easily ported to
-// other languages.  The lcg can then be used to validate that ports of
-// digest2 produce the same answers.
-type Rand interface {
-	Float64() float64
-	Seed(int64)
 }
 
 // some parameters for the algorithm
